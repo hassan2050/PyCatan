@@ -1,5 +1,5 @@
 from pycatan.board import Board
-from pycatan.hex_type import HexType
+from pycatan.tile_type import TileType
 from pycatan.game import Game
 from blessings import Terminal
 import math
@@ -23,7 +23,7 @@ class BoardRenderer:
         # Clear screen
         print(self.terminal.clear())
         # Render hexes
-        for r in self.board.hexes:
+        for r in self.board.tiles:
             for h in r:
                 self.render_hex(h)
         # Render roads
@@ -76,9 +76,10 @@ class BoardRenderer:
         # Should be either "\", "/" or "___"
         road_str = ""
         # Get the points
-        point_one_pos = road_obj.point_one
-        point_two_pos = road_obj.point_two
+        point_one_pos = road_obj.point_one.position
+        point_two_pos = road_obj.point_two.position
         # Get their coordinates
+
         p_one_coords = self.get_point_coords(point_one_pos[0], point_one_pos[1])
         p_two_coords = self.get_point_coords(point_two_pos[0], point_two_pos[1])
         # If they're on the same line
@@ -118,7 +119,7 @@ class BoardRenderer:
         x += 4 * index
         y += 1 * index
         # If the row is in the bottom half, it should move the hex down and to the left
-        length = len(self.board.hexes)
+        length = len(self.board.tiles)
         if row > length / 2:
             # Move if one hex to the right for every row between its row and the halfway row
             x += 4 * math.ceil(row - length / 2)
@@ -161,21 +162,21 @@ class BoardRenderer:
     # Get a 1 letter long string representation on a certain hex type
     @staticmethod
     def get_hex_type_string(hex_type):
-        if hex_type == HexType.HILLS:
+        if hex_type == TileType.Hills:
             return "H"
-        elif hex_type == HexType.MOUNTAINS:
+        elif hex_type == TileType.Mountains:
             return "M"
-        elif hex_type == HexType.PASTURE:
+        elif hex_type == TileType.Pasture:
             return "P"
-        elif hex_type == HexType.FOREST:
+        elif hex_type == TileType.Forest:
             return "F"
-        elif hex_type == HexType.FIELDS:
+        elif hex_type == TileType.Fields:
             # Since F is already used, use W for "wheat"
             return "W"
-        elif hex_type == HexType.DESERT:
+        elif hex_type == TileType.Desert:
             return "D"
         else:
-            raise Exception("Unknown HexType %s passed to get_hex_type_string" % hex_type)
+            raise Exception("Unknown TileType %s passed to get_hex_type_string" % hex_type)
 
 
 
@@ -183,11 +184,11 @@ if __name__ == "__main__":
     g = Game()
     br = BoardRenderer(g.board, [50, 10])
     # Add some settlements
-    g.add_settlement(player=0, r=0, i=0, is_starting=True)
-    g.add_settlement(player=1, r=2, i=3, is_starting=True)
-    g.add_settlement(player=2, r=4, i=1, is_starting=True)
+    g.add_settlement(player=0, point=g.board.points[0][0], is_starting=True)
+    g.add_settlement(player=1, point=g.board.points[2][3], is_starting=True)
+    g.add_settlement(player=2, point=g.board.points[4][1], is_starting=True)
     # Add some roads
-    g.add_road(player=0, start=[0, 0], end=[0, 1], is_starting=True)
-    g.add_road(player=1, start=[2, 3], end=[2, 2], is_starting=True)
-    g.add_road(player=2, start=[4, 1], end=[4, 0], is_starting=True)
+    g.add_road(player=0, start=g.board.points[0][0], end=g.board.points[0][1], is_starting=True)
+    g.add_road(player=1, start=g.board.points[2][3], end=g.board.points[2][2], is_starting=True)
+    g.add_road(player=2, start=g.board.points[4][1], end=g.board.points[4][0], is_starting=True)
     br.render()
