@@ -344,3 +344,12 @@ class Game:
     def get_roll(self):
         return round(random.random() * 6) + round(random.random() * 6)
 
+    def get_point(self, i, j=None):
+      if j is None:
+        return self.board.points[i[0]][i[1]]
+      return self.board.points[i][j]
+
+    def get_tile(self, i, j=None):
+      if j is None:
+        return self.board.tiles[i[0]][i[1]]
+      return self.board.tiles[i][j]

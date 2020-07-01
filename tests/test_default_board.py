@@ -3,7 +3,8 @@ from pycatan.default_board import DefaultBoard
 
 class TestDefaultBoard:
     def test_get_connected_tiles(self):
-        board = Game().board
+        g = Game()
+        board = g.board
         test_cases = {
             (0, 0): [[0, 0]],
             (0, 1): [[0, 0]],
@@ -22,7 +23,7 @@ class TestDefaultBoard:
 
     def test_points_have_reference_to_tiles(self):
         # Get board
-        b = Game().board
+        g = Game()
         # Test cases
         # Keys are the coordinates of the points, whereas values
         # are the coordinates of the tiles surronding that point
@@ -35,15 +36,15 @@ class TestDefaultBoard:
         }
         # Check each point has references to the tiles around it
         for key in cases:
-            point = b.points[key[0]][key[1]]
+            point = g.get_point(key)
             answers = cases[key]
             for ans in answers:
-                tile = b.tiles[ans[0]][ans[1]]
+                tile = g.get_tile(ans)
                 assert tile in point.tiles
 
     def test_tiles_have_references_to_points(self):
         # Get board
-        b = Game().board
+        g = Game()
         # Test cases
         cases = {
             (0, 0): [
@@ -72,14 +73,14 @@ class TestDefaultBoard:
             ]
         }
         for key in cases:
-            tile = b.tiles[key[0]][key[1]]
+            tile = g.get_tile(key)
             answers = cases[key]
             for ans in answers:
-                point = b.points[ans[0]][ans[1]]
+                point = g.get_point(ans)
                 assert point in tile.points
 
     def test_points_have_references_to_connected_points(self):
-        board = Game().board
+        g = Game()
         cases = {
             (0, 0): (0, 1),
             (0, 0): (1, 1),
@@ -90,7 +91,7 @@ class TestDefaultBoard:
         }
         for case in cases:
             ans = cases[case]
-            assert board.points[ans[0]][ans[1]] in board.points[case[0]][case[1]].connected_points
+            assert g.get_point(ans) in g.get_point(case).connected_points
 
     def test_get_outside_points(self):
         # Get outside points
@@ -122,7 +123,7 @@ class TestDefaultBoard:
 
     def test_harbors_are_placed_correctly(self):
         # Create board
-        board = Game().board
+        g = Game()
         # Test that the harbors are on these spots
         cases = [
             (0, 2),
@@ -131,14 +132,15 @@ class TestDefaultBoard:
             (5, 2)
         ]
         # Flatten all harbor positions
-        harbor_positions = list(sum(map(lambda x: [x.point_one, x.point_two], board.harbors), []))
+        harbor_positions = list(sum(map(lambda x: [x.point_one, x.point_two], g.board.harbors), []))
         for case in cases:
-            assert board.points[case[0]][case[1]] in harbor_positions
+            assert g.get_point(case) in harbor_positions
 
     def test_harbors_always_have_connected_points(self):
         # Create board
-        board = Game().board
+        g = Game()
+
         # For every harbor, check that the two points are connected
-        for harbor in board.harbors:
+        for harbor in g.board.harbors:
             print(harbor.point_one)
             assert harbor.point_two in harbor.point_one.connected_points

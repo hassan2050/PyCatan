@@ -20,7 +20,7 @@ class TestBoard:
         # Make sure robber is not on the top-left tile
         board.robber = [1, 1]
         # add settlement
-        game.add_settlement(0, game.board.points[0][0], True)
+        game.add_settlement(0, game.get_point(0,0), True)
         # give the roll
         board.add_yield(8)
         # check the board gave the cards correctly
@@ -30,9 +30,9 @@ class TestBoard:
         game = Game()
         board = game.board
         # Move robber to top-left corner
-        board.robber = board.tiles[0][0]
+        board.robber = game.get_tile(0,0)
         # Add settlement
-        game.add_settlement(0, game.board.points[0][0], True)
+        game.add_settlement(0, game.get_point(0,0), True)
         # Roll an 8
         board.add_yield(8)
         # Ensure the robber prevented the player from getting the card

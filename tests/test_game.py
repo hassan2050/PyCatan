@@ -24,43 +24,43 @@ class TestGame:
             ResCard.Wheat
         ])
         # Test adding a starting settlement, i.e. no cards needed
-        res = g.add_settlement(0, g.board.points[0][0], True)
+        res = g.add_settlement(0, g.get_point(0,0), True)
         assert res == Statuses.ALL_GOOD
-        assert g.board.points[0][0].building != None
-        assert g.board.points[0][0].building.type == Building.BUILDING_SETTLEMENT
-        assert g.board.points[0][0].building.point is g.board.points[0][0]
+        assert g.get_point(0,0).building != None
+        assert g.get_point(0,0).building.type == Building.BUILDING_SETTLEMENT
+        assert g.get_point(0,0).building.point is g.board.points[0][0]
         assert len(g.players[0].cards) == 4
         # Test adding a settlement too close to another settlement
-        res = g.add_settlement(1, g.board.points[0][1], True)
+        res = g.add_settlement(1, g.get_point(0,1), True)
         assert res == Statuses.ERR_BLOCKED
         # Test adding a settlement the correct distance away
-        res = g.add_settlement(2, g.board.points[0][2], True)
+        res = g.add_settlement(2, g.get_point(0,2), True)
         assert res == Statuses.ALL_GOOD
     def test_adding_starting_roads(self):
         # Create game
         g = Game()
         # Add starting settlement
-        g.add_settlement(0, g.board.points[0][0], True)
+        g.add_settlement(0, g.get_point(0,0), True)
         # Try adding a road
-        res = g.add_road(0, g.board.points[0][0], g.board.points[0][1], True)
+        res = g.add_road(0, g.get_point(0,0), g.get_point(0,1), True)
         assert res == Statuses.ALL_GOOD
-        res = g.add_road(0, g.board.points[1][1], g.board.points[0][0], True)
+        res = g.add_road(0, g.get_point(1,1), g.get_point(0,0), True)
         assert res == Statuses.ALL_GOOD
         # Try adding a disconnected road
-        res = g.add_road(0, g.board.points[2][0], g.board.points[2][1], True)
+        res = g.add_road(0, g.get_point(2,0), g.get_point(2,1), True)
         assert res == Statuses.ERR_ISOLATED
         # Try adding a road whose point's are not connected
-        res = g.add_road(0, g.board.points[0][0], g.board.points[5][5], True)
+        res = g.add_road(0, g.get_point(0,0), g.get_point(5,5), True)
         assert res == Statuses.ERR_NOT_CON
         # Try adding a road connected to another player's settlement
-        g.add_settlement(1, g.board.points[2][2], True)
-        res = g.add_road(0, g.board.points[2][2], g.board.points[2][3], True)
+        g.add_settlement(1, g.get_point(2,2), True)
+        res = g.add_road(0, g.get_point(2,2), g.get_point(2,3), True)
         assert res == Statuses.ERR_ISOLATED
     # Test that player.add_settlement returns the proper value
     def test_add_settlement(self):
         g = Game()
         # Try to add a settlement without the cards
-        g.add_settlement(0, g.board.points[0][0])
+        g.add_settlement(0, g.get_point(0,0))
         # Add cards to build a settlement
         g.players[0].add_cards([
             ResCard.Wood,
@@ -69,17 +69,17 @@ class TestGame:
             ResCard.Wheat
         ])
         # Try adding an isolated settlement
-        res = g.add_settlement(0, g.board.points[0][0])
+        res = g.add_settlement(0, g.get_point(0,0))
         assert res == Statuses.ERR_ISOLATED
-        assert g.board.points[0][0].building == None
+        assert g.get_point(0,0).building == None
         # Add starting settlement and two roads to ensure there is an available position
-        assert g.add_settlement(0, g.board.points[0][2], True) == Statuses.ALL_GOOD
-        assert g.add_road(0, g.board.points[0][2], g.board.points[0][1], True) == Statuses.ALL_GOOD
-        assert g.add_road(0, g.board.points[0][0], g.board.points[0][1], True) == Statuses.ALL_GOOD
-        res = g.add_settlement(0, g.board.points[0][0])
+        assert g.add_settlement(0, g.get_point(0,2), True) == Statuses.ALL_GOOD
+        assert g.add_road(0, g.get_point(0,2), g.get_point(0,1), True) == Statuses.ALL_GOOD
+        assert g.add_road(0, g.get_point(0,0), g.get_point(0,1), True) == Statuses.ALL_GOOD
+        res = g.add_settlement(0, g.get_point(0,0))
         assert res == Statuses.ALL_GOOD
-        assert g.board.points[0][0].building != None
-        assert g.board.points[0][0].building.type == Building.BUILDING_SETTLEMENT
+        assert g.get_point(0,0).building != None
+        assert g.get_point(0,0).building.type == Building.BUILDING_SETTLEMENT
     # Test trading in cards either directly through the bank
     def test_trade_in_cards_through_bank(self):
         g = Game()
@@ -103,11 +103,11 @@ class TestGame:
     def test_trade_in_cards_through_harbor(self):
         g = Game();
         # Add Settlement next to the harbor on the top
-        res = g.add_settlement(0, g.board.points[0][2], is_starting=True)
+        res = g.add_settlement(0, g.get_point(0,2), is_starting=True)
         assert res == Statuses.ALL_GOOD
         # Make the harbor trade in ore for testing
         for h in g.board.harbors:
-            if g.board.points[0][2] in h.get_points():
+            if g.get_point(0,2) in h.get_points():
                 h.type = HarborType.Ore
                 print("found harbor lmao")
         g.players[0].add_cards([ResCard.Ore] * 2)
@@ -137,10 +137,10 @@ class TestGame:
         random.seed(1)
         g = Game()
         # Move the robber
-        g.move_robber(g.board.tiles[0][0], None, None)
-        assert g.board.robber is g.board.tiles[0][0]
+        g.move_robber(g.get_tile(0,0), None, None)
+        assert g.board.robber is g.get_tile(0,0)
         # Build a settlement at 1, 1
-        g.add_settlement(player=0, point=g.board.points[1][1], is_starting=True)
+        g.add_settlement(player=0, point=g.get_point(1,1), is_starting=True)
         # Roll an 8
         g.add_yield_for_roll(8)
         # Ensure the player got nothing since the robber was there
@@ -148,6 +148,6 @@ class TestGame:
         # Give the player a brick to steal
         g.players[0].add_cards([ResCard.Brick])
         # Move the robber to 1, 0 and steal the brick
-        g.move_robber(g.board.tiles[1][0], 1, 0)
+        g.move_robber(g.get_tile(1,0), 1, 0)
         # Make sure they stole the brick
         assert g.players[1].has_cards([ResCard.Brick])
