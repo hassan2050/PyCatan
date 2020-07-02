@@ -27,8 +27,14 @@ class Player:
         # the longest road segment this player has
         self.longest_road_length = 0
 
+        self.num_roads = 15
+        self.num_settlements = 5
+        self.num_cities = 4
+
+
     # builds a settlement belonging to this player
     def build_settlement(self, point, is_starting=False):
+        if self.num_settlements == 0: return Statuses.ERR_OUTOFBUILDINGS
 
         if not is_starting:
             # makes sure the player has the cards to build a settlements
@@ -83,6 +89,7 @@ class Player:
             point = point)
         # adds a victory point
         self.victory_points += 1
+        self.num_settlements -= 1
 
         return Statuses.ALL_GOOD
 
@@ -185,7 +192,7 @@ class Player:
                     if p.building == None:
                         is_connected = True
 
-                    # if theere is a settlement/city there, the road can be built if this player owns it
+                    # if there is a settlement/city there, the road can be built if this player owns it
                     elif p.building.owner == self.num:
                         is_connected = True
 
@@ -196,6 +203,7 @@ class Player:
 
     # builds a road
     def build_road(self, start, end, is_starting=False):
+        if self.num_roads == 0: return Statuses.ERR_OUTOFBUILDINGS
 
         # checks the location is valid
         location_status = self.road_location_is_valid(start=start, end=end)
@@ -223,6 +231,8 @@ class Player:
         (self.game).board.add_road(road)
 
         self.get_longest_road(new_road=road)
+
+        self.num_roads -= 1
 
         return Statuses.ALL_GOOD
 
@@ -347,7 +357,7 @@ class Player:
         # adds VPs from developement cards
         if include_dev:
             for d in self.dev_cards:
-                if d == DevCard.VP:
+                if d == DevCard.VictoryPoint:
                     points += 1
 
         return points
