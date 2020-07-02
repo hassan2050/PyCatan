@@ -11,6 +11,7 @@ class ResCard(Enum):
     Wheat = 4
     def __repr__(self):
       return self.name
+    def dict(self): return self.name
 
 # The different types of developement cards
 class DevCard(Enum):
@@ -23,3 +24,4 @@ class DevCard(Enum):
     YearOfPlenty = 4
     def __repr__(self):
       return self.name
+    def dict(self): return self.name

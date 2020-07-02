@@ -8,3 +8,5 @@ class Point:
     def __repr__(self):
         return "Point(%s,%s)" % (self.position[0], self.position[1])
 
+    def dict(self):
+      return self.position

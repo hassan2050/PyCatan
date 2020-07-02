@@ -11,68 +11,15 @@ import random_ai
 
 _version = "0.1"
 
-class CatanSim:
-  def __init__(self):
-    self.game = pycatan.Game()
-    logging.debug("%s players" % len(self.game.players))
+def start(args):
+  g = pycatan.Game()
+  g.load(args.files[0])
 
-    for player in self.game.players:
-      player.controller = random_ai.AIPlayer(self.game, player)
-    
-  def roll_dice(self, player):
-    roll = self.game.get_roll()
-    logging.debug("rolled %d" % roll)
+  br = board_renderer.BoardRenderer(g.board, [50, 10])
+  br.render()
+  #time.sleep(1)
 
-    if roll == 7:
-      ## card check
-      for player in self.game.players:
-        if len(player.cards) > 7:
-          player.controller.remove_cards(len(player.cards) // 2)
 
-      ## move robber
-      (tile, victim) = player.controller.move_robber(self)
-      logging.debug("P%s: move_robber: tile:%s victim:%s" % (player.num, tile, victim))
-      self.game.move_robber(tile, player.num, victim)
-    else:
-      ## produce goods
-      self.game.add_yield_for_roll(roll)
-
-  def start(self):
-    for player in self.game.players:
-      player.controller.choose_starting_settlement()
-    for player in reversed(self.game.players):
-      player.controller.choose_starting_settlement()
-
-    br = board_renderer.BoardRenderer(self.game.board, [50, 10])
-    #br.render()
-    #time.sleep(1)
-
-    round = 0
-    while not self.game.has_ended:
-      round += 1
-      scores = [p.get_VP(include_dev=True) for p in self.game.players]
-
-      logging.debug("Round %d: %s" % (round, scores))
-
-      for player in self.game.players:
-        player.controller.take_turn(self)
-        
-        if self.game.has_ended: break
-
-        #br.render()
-        #time.sleep(1)
-
-    #br.render()
-    #time.sleep(.1)
-    scores = [p.get_VP(include_dev=True) for p in self.game.players]
-    logging.info("Round %d: %s" % (round, scores))
-    
-
-def start():
-  while 1:
-    c = CatanSim()
-    c.start()
-  
 def test():
   logging.warn("Testing")
 
@@ -94,7 +41,7 @@ def parse_args(argv):
   parser.add_argument("-q", "--quiet", dest="log_level", action="store_const",
                       const="CRITICAL",
                       help="Quite mode")
-  #parser.add_argument("files", type=str, nargs='+')
+  parser.add_argument("files", type=str, nargs='+')
 
   args = parser.parse_args(argv[1:])
   if args.log_level is None: args.log_level = "WARN"
@@ -115,7 +62,7 @@ def main(argv, stdout, environ):
 
   if args.test_flag:  test();   return
   
-  start()
+  start(args)
 
 if __name__ == "__main__":
   main(sys.argv, sys.stdout, os.environ)

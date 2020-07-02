@@ -1,4 +1,4 @@
-from pycatan.building import Building
+from pycatan.building import *
 from pycatan.statuses import Statuses
 from pycatan.card import ResCard, DevCard
 
@@ -30,7 +30,34 @@ class Player:
         self.num_roads = 15
         self.num_settlements = 5
         self.num_cities = 4
+        
+    def dict(self):
+      d = {}
+      d['cards'] = self.cards
+      d['dev_cards'] = self.dev_cards
+      d['knight_cards'] = self.knight_cards
+      d['num'] = self.num
+      d['num_roads'] = self.num_roads
+      d['num_settlements'] = self.num_settlements
+      d['num_cities'] = self.num_cities
+      
+      return d
 
+    def load(self, d):
+      self.num = d['num']
+      self.num_roads = d['num_roads']
+      self.num_settlements = d['num_settlements']
+      self.num_cities = d['num_cities']
+      self.knight_cards = d['knight_cards']
+      self.dev_cards = []
+      for card in d['dev_cards']:
+        self.dev_cards.append(getattr(DevCard, card))
+
+      self.cards = []
+      for card in d['cards']:
+        self.cards.append(getattr(ResCard, card))
+
+      
 
     # builds a settlement belonging to this player
     def build_settlement(self, point, is_starting=False):
@@ -82,11 +109,8 @@ class Player:
             self.remove_cards(cards_needed)
 
         # adds the settlement
-        self.game.board.add_building(Building(
-            owner = self.num,
-            type = Building.BUILDING_SETTLEMENT,
-            point_one = point),
-            point = point)
+        building = Settlement(owner=self.num, point=point)
+        self.game.board.add_building(building, point)
         # adds a victory point
         self.victory_points += 1
         self.num_settlements -= 1
@@ -227,7 +251,7 @@ class Player:
             self.remove_cards(cards_needed)
 
         # adds the road
-        road = Building(owner=self.num, type=Building.BUILDING_ROAD, point_one=start, point_two=end)
+        road = Road(owner=self.num, point_one=start, point_two=end)
         (self.game).board.add_road(road)
 
         self.get_longest_road(new_road=road)

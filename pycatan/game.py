@@ -2,9 +2,10 @@ from pycatan.default_board import DefaultBoard
 from pycatan.player import Player
 from pycatan.statuses import Statuses
 from pycatan.card import ResCard, DevCard
-from pycatan.building import Building
+from pycatan.building import *
 from pycatan.harbor import Harbor
 
+import json
 import logging
 import random
 import math
@@ -279,8 +280,7 @@ class Game:
 
             # builds the roads
             for r in road_names:
-                self.board.add_road(Building(point_one=args[r]["start"], point_two=args[r]["end"], owner=player, type=Building.BUILDING_ROAD))
-
+                self.board.add_road(Road(owner=player, point_one=args[r]["start"], point_two=args[r]["end"]))
 
         elif card == DevCard.Knight:
             # checks there are the right arguments
@@ -369,3 +369,31 @@ class Game:
       if j is None:
         return self.board.tiles[i[0]][i[1]]
       return self.board.tiles[i][j]
+    
+    def save(self):
+      d = {}
+      d['board'] = self.board
+      d['points_to_win'] = self.points_to_win
+      d['dev_deck'] = self.dev_deck
+      d['players'] = self.players
+
+      s = json.dumps(d, sort_keys=True, indent=2, cls=DefaultEncoder)
+      return s
+
+    def load(self, fn):
+      d = json.loads(open(fn).read())
+      self.points_to_win = d['points_to_win']
+
+      self.dev_deck = []
+      for card in d['dev_deck']:
+        self.dev_deck.append(getattr(DevCard, card))
+
+      for player_data in d['players']:
+        player = self.players[player_data['num']]
+        player.load(player_data)
+
+      self.board.load(d['board'])
+      
+class DefaultEncoder(json.JSONEncoder):
+  def default(self, o):
+    return o.dict()

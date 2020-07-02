@@ -13,6 +13,9 @@ class HarborType(Enum):
     # the 3:1 type
     Any = 5
 
+    def dict(self):
+      return self.name
+
 # represents a catan harbor
 class Harbor:
 
@@ -26,6 +29,9 @@ class Harbor:
 
     def __repr__(self):
         return "Harbor %s, %s Type %s" % (self.point_one, self.point_two, self.type)
+
+    def dict(self):
+      return {"type":self.type, "points":[self.point_one, self.point_two]}
 
     def get_points(self):
         return [self.point_one, self.point_two]

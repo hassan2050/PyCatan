@@ -10,3 +10,7 @@ class Tile:
 
     def __repr__(self):
         return "<%s %s at %s>" % (self.type.name, self.token_num, self.position)
+
+    def dict(self):
+      return {"tile":self.type.name, "num":self.token_num, "position":self.position}
+

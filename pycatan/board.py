@@ -1,7 +1,7 @@
 from pycatan.harbor import Harbor, HarborType
 from pycatan.player import Player
 from pycatan.statuses import Statuses
-from pycatan.building import Building
+from pycatan.building import *
 from pycatan.tile_type import TileType
 from pycatan.card import ResCard, DevCard
 from pycatan.tile import Tile
@@ -76,7 +76,7 @@ class Board(object):
                             # gets the card type
                             card_type = Board.get_card_from_tile(current_tile.type)
                             # adds two if it is a city
-                            if building.type == Building.BUILDING_CITY:
+                            if building.type == BuildingType.City:
                                 self.game.players[owner].add_cards([
                                     card_type,
                                     card_type
@@ -122,7 +122,7 @@ class Board(object):
             return Statuses.ERR_BAD_OWNER
 
         # checks it is a settlement and not a city
-        if building.type != Building.BUILDING_SETTLEMENT:
+        if building.type != BuildingType.Settlement:
             return Statuses.ERR_UPGRADE_CITY
 
         # checks the player has the cards
@@ -139,7 +139,9 @@ class Board(object):
         # removes the cards
         self.game.players[player].remove_cards(needed_cards)
         # changes the settlement to a city
-        building.type = Building.BUILDING_CITY
+        point.building = City(building.owner, building.point)
+        building = point.building
+
         # adds another victory point
         self.game.players[player].victory_points += 1
 
@@ -232,3 +234,48 @@ class Board(object):
 
         else:
             return None
+
+    def get_all_tiles(self):
+      return [item for sublist in self.game.board.tiles for item in sublist]
+
+    def get_all_points(self):
+      return [item for sublist in self.game.board.points for item in sublist]
+
+    def dict(self):
+      d = {}
+
+      d['tiles'] = self.get_all_tiles()
+      d['harbors'] = self.harbors
+      d['robber'] = self.robber.position
+      d['buildings'] = self.get_buildings()
+      d['roads'] = self.roads
+
+      return d
+
+    def load(self, d):
+      for tile_data in d['tiles']:
+        print (tile_data)
+        t = self.game.get_tile(tile_data['position'])
+        t.token_num = tile_data['num']
+        t.type = getattr(TileType, tile_data['tile'])
+        print (t)
+          
+      bpoints = self.get_all_points()
+      for point in bpoints:
+        point.building = None
+
+      self.robber = self.game.get_tile(d['robber'])
+
+      for building_data in d['buildings']:
+        if building_data['type'] == "Settlement":
+          p = self.game.get_point(building_data['point'])
+          p.building = Settlement(building_data['owner'], p)
+        elif building_data['type'] == "City":
+          p = self.game.get_point(building_data['point'])
+          p.building = City(building_data['owner'], p)
+
+      for road_data in d['roads']:
+        p1 = self.game.get_point(road_data['point_one'])
+        p2 = self.game.get_point(road_data['point_two'])
+        self.roads.append(Road(road_data['owner'], p1, p2))
+          

@@ -70,7 +70,7 @@ class AIPlayer:
         bpoints = [item for sublist in self.game.board.points for item in sublist]
         settlements = []
         for p in bpoints:
-          if p.building and p.building.owner == self.player.num and p.building.type == pycatan.Building.BUILDING_SETTLEMENT:
+          if p.building and p.building.owner == self.player.num and p.building.type == pycatan.BuildingType.Settlement:
             settlements.append(p)
         if settlements and self.player.num_cities > 0:
           actions.append(("upgrade_settlement", settlements))
@@ -107,7 +107,9 @@ class AIPlayer:
 
         res = self.game.add_road(self.player.num, p1, p2)
         if res != Statuses.ALL_GOOD: 
-          logging.error("P%s: build_road %s" % (self.player.num, res))
+          logging.error("P%s: build_road %s p1:%s p2:%s" % (self.player.num, res.name, p1, p2))
+          open("board.json", "w").write(self.game.save())
+          sys.exit(1)
           error_actions.append("build_road")
 
       elif cmd == "build_settlement":
@@ -181,7 +183,7 @@ class AIPlayer:
   def move_robber(self, sim):
     logging.debug("P%s: move_robber" % self.player.num)
 
-    tiles = [item for sublist in self.game.board.tiles for item in sublist]
+    tiles = self.game.board.get_all_tiles()
     tile = random.choice(tiles)
     
     potential = []
