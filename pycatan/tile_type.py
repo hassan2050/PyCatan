@@ -9,3 +9,7 @@ class TileType(Enum):
     Mountains = 3
     Hills = 4
     Forest = 5
+    def __repr__(self):
+      return self.name
+
+
