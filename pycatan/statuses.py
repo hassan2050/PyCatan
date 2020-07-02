@@ -1,6 +1,8 @@
+from enum import Enum
+
 # different statuses in the Game module
 # skips 0 and 1 because there are already equal to True and False
-class Statuses:
+class Statuses(Enum):
 
     # the action was successfully completed
     ALL_GOOD = 2
@@ -31,3 +33,9 @@ class Statuses:
     ERR_INPUT = 13
     # when running the testing module, an error was found
     ERR_TEST = 14
+    # when running the testing module, an error was found
+    ERR_OUTOFBUILDINGS = 15
+
+    def __repr__(self):
+      return self.name
+
