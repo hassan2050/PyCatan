@@ -5,19 +5,22 @@ from pycatan.card import ResCard, DevCard
 from pycatan.building import Building
 from pycatan.harbor import Harbor
 
+import logging
 import random
 import math
 
 class Game:
 
     # initializes the  game
-    def __init__(self, num_of_players=3, on_win=None, starting_board=False):
+    def __init__(self, num_of_players=3, on_win=None, starting_board=False, points_to_win=10):
         # creates a board
         self.board = DefaultBoard(game=self);
         # creates players
         self.players = []
         for i in range(num_of_players):
             self.players.append(Player(num=i, game=self))
+
+        self.points_to_win = points_to_win
         # Set onWin method
         self.on_win = on_win
         # creates a new Developement deck
@@ -40,6 +43,7 @@ class Game:
         self.largest_army = None
         # whether the game has finished or not
         self.has_ended = False
+        self.winner = None
 
     # creates a new settlement belong to the player at the coodinates
     def add_settlement(self, player, point, is_starting=False):
@@ -47,10 +51,7 @@ class Game:
         status = self.players[player].build_settlement(point=point, is_starting=is_starting)
         # If successful, check if the player has now won
         if status == Statuses.ALL_GOOD:
-            if self.players[player].get_VP() >= 10:
-                # End the game
-                self.has_ended = True
-                self.winner = player
+          self.check_for_win()
 
         return status
 
@@ -79,9 +80,14 @@ class Game:
         # removes the cards
         self.players[player].remove_cards(needed_cards)
         # gives the player a dev card
-        self.players[player].add_dev_card(self.dev_deck[0])
+        card = self.dev_deck[0]
+        self.players[player].add_dev_card(card)
         # removes that dev card from the deck
         del self.dev_deck[0]
+
+        if card == DevCard.VictoryPoint:
+          self.check_for_win()
+        return Statuses.ALL_GOOD
 
     # gives players the proper cards for a given roll
     def add_yield_for_roll(self, roll):
@@ -110,12 +116,14 @@ class Game:
     # Note that player is the player moving the robber
     # and victim is the player whose card is being taken
     def move_robber(self, tile, player, victim):
+        logging.debug("move_robber %s %s %s" % (tile, player, victim))
         # checks the player wants to take a card from somebody
         if victim != None:
             # checks the victim has a settlement on the tile
             has_settlement = False
             # Iterate over points and check if there is a settlement/city on any of them
-            points = self.board.get_connected_points(tile.position[0], tile.position[1])
+            #points = self.board.get_connected_points(tile.position[0], tile.position[1])
+            points = tile.points
             for p in points:
                 if p != None and p.building != None:
                     # Check the victim owns the settlement/city
@@ -130,11 +138,11 @@ class Game:
         # takes a random card from the victim
         if victim != None:
             # removes a random card from the victim
-            index = round(random.random() * (len(self.players[victim].cards) - 1))
-            card = self.players[victim].cards[index]
-            self.players[victim].remove_cards([card])
-            # adds it to the player
-            self.players[player].add_cards([card])
+            if self.players[victim].cards:
+              card = random.choice(self.players[victim].cards)
+              self.players[victim].remove_cards([card])
+              # adds it to the player
+              self.players[player].add_cards([card])
 
         return Statuses.ALL_GOOD
 
@@ -189,9 +197,15 @@ class Game:
         if self.longest_road_owner != owner:
             self.longest_road_owner = owner
             # checks if the player has won now that they has longest road
-            if self.players[owner].get_VP() >= 10:
-                self.has_ended = True
-                self.winner = owner
+            self.check_for_win()
+
+    def check_for_win(self):
+      for player in self.players:
+        if player.get_VP(include_dev=True) >= self.points_to_win:
+          self.has_ended = True
+          self.winner = player
+          return True
+      return False
 
     # changes a settlement on the board for a city
     def add_city(self, point, player):
@@ -199,8 +213,7 @@ class Game:
 
         if status == Statuses.ALL_GOOD:
             # checks if the player won
-            if self.players[player].get_VP() >= 10:
-                self.winner = player
+            self.check_for_win()
 
         return status
 
@@ -268,22 +281,24 @@ class Game:
             for r in road_names:
                 self.board.add_road(Building(point_one=args[r]["start"], point_two=args[r]["end"], owner=player, type=Building.BUILDING_ROAD))
 
-            return Statuses.ALL_GOOD
 
         elif card == DevCard.Knight:
             # checks there are the right arguments
             if not ("robber_pos" in args and "victim" in args):
+                logging.error("err input1")
                 return Statuses.ERR_INPUT
 
             # checks the victim input is valid
             if args["victim"] != None:
                 if args["victim"] < 0 or args["victim"] >= len(self.players) or args["victim"] == player:
+                    logging.error("err input2")
                     return Statuses.ERR_INPUT
 
             # moves the robber
-            result = self.move_robber(r=args["robber_pos"][0], i=args["robber_pos"][1], player=player, victim=args["victim"])
+            result = self.move_robber(tile=args["robber_pos"], player=player, victim=args["victim"])
 
             if result != Statuses.ALL_GOOD:
+                logging.error("err input3")
                 return result
 
             # adds one to the player's knight count
@@ -301,6 +316,7 @@ class Game:
 
                 if self.players[player].knight_cards > current_longest:
                     self.largest_army = player
+            self.check_for_win()
 
         elif card == DevCard.Monopoly:
             # gets the type of card
@@ -332,7 +348,7 @@ class Game:
             ])
 
         else:
-            # error here
+            logging.error("error3")
             return Statuses.ERR_INPUT
 
         # removes the card
