@@ -40,6 +40,17 @@ class Board(object):
         # going r, i
         self.robber = None
 
+    @staticmethod
+    def get_tile_indexes_for_point(r, i):
+      pass
+
+    def get_connected_points(self, r, i):
+      pass
+
+    @staticmethod
+    def get_outside_points():
+      pass
+
     # gives the players cards for a certain roll
     def add_yield(self, roll):
 
@@ -96,6 +107,8 @@ class Board(object):
 
     # upgrades an existing settlement to a city
     def upgrade_settlement(self, player, point):
+        if self.game.players[player].num_cities == 0: return Statuses.ERR_OUTOFBUILDINGS
+
         # Get building at point
         building = point.building
 
@@ -129,6 +142,9 @@ class Board(object):
         building.type = Building.BUILDING_CITY
         # adds another victory point
         self.game.players[player].victory_points += 1
+
+        self.game.players[player].num_cities -= 1
+        self.game.players[player].num_settlements += 1
 
         return Statuses.ALL_GOOD
 
