@@ -9,4 +9,4 @@ class Tile:
         self.points = points
 
     def __repr__(self):
-        return "| %s, %s at r=%s, i=%s |" % (self.type, self.token_num, self.position[0], self.position[1])
+        return "<%s %s at %s>" % (self.type.name, self.token_num, self.position)
