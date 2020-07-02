@@ -315,6 +315,8 @@ class Player:
 
         return roads
 
+    
+
     # checks if the player has some development cards
     def has_dev_cards(self, cards):
         card_duplicate = self.dev_cards[:]
@@ -383,3 +385,80 @@ class Player:
             print("    %s" % card_name)
 
         print("]")
+
+      
+    def get_available_roads(self):
+      available_roads = []
+
+      roads = self.get_roads()
+      for road in roads:
+        for p1 in (road.point_one, road.point_two):
+          for p2 in p1.connected_points:
+            if not self.game.board.get_road(p1, p2):
+              if (p2, p1) not in available_roads:
+                available_roads.append((p1, p2))
+
+      buildings = self.get_buildings()
+      for building in buildings:
+        p1 = building.point
+        for p2 in p1.connected_points:
+          if not self.game.board.get_road(p1, p2):
+            if (p2, p1) not in available_roads and (p1, p2) not in available_roads:
+              available_roads.append((p1, p2))
+
+      return available_roads
+
+    def get_available_settlements(self):
+      available_points = []
+
+      ## if no buildings, then list all possble points
+      buildings = self.get_buildings()
+      if len(buildings) < 2:
+        bpoints = [item for sublist in self.game.board.points for item in sublist]
+        for point in bpoints:
+          if point.building != None: continue
+          
+          occupied = False
+          for p in point.connected_points:
+            # checks if the point is occupied
+            if p.building != None: occupied = True
+          if occupied: continue
+          available_points.append(point)
+
+      bpoints = [item for sublist in self.game.board.points for item in sublist]
+      for point in bpoints:
+        if point.building != None: continue
+
+        connected_by_road = False
+        roads = self.game.board.roads
+
+        for r in roads:
+          # checks if the road is connected
+          if r.point_one is point or r.point_two is point:
+            # checks this player owns the road
+            if r.owner == self.num:
+              connected_by_road = True
+        if not connected_by_road: continue
+
+        occupied = False
+        points = point.connected_points
+        for p in points:
+          # checks if the point is occupied
+          if p.building != None: occupied = True
+        if occupied: continue
+
+        available_points.append(point)
+      return available_points
+
+    def get_buildings(self):
+      bpoints = [item for sublist in self.game.board.points for item in sublist]
+      buildings = []
+      for p in bpoints:
+        if not p.building: continue
+        if p.building.owner == self.num:
+          buildings.append(p.building)
+      return buildings
+        
+        
+      
+      
