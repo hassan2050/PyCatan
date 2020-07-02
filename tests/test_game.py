@@ -4,6 +4,7 @@ from pycatan.card import ResCard
 from pycatan.statuses import Statuses
 from pycatan.harbor import HarborType
 import random
+import logging
 
 class TestGame:
 
@@ -151,3 +152,132 @@ class TestGame:
         g.move_robber(g.get_tile(1,0), 1, 0)
         # Make sure they stole the brick
         assert g.players[1].has_cards([ResCard.Brick])
+
+    def test_get_buildings(self):
+        # Create game
+        g = Game()
+        buildings = g.players[0].get_buildings()
+        assert len(buildings) == 0
+
+        res = g.add_settlement(0, g.get_point(5,3), True)
+        assert res == Statuses.ALL_GOOD
+
+        buildings = g.players[0].get_buildings()
+        assert len(buildings) == 1
+        
+        res = g.add_settlement(0, g.get_point(3,2), True)
+        assert res == Statuses.ALL_GOOD
+
+        buildings = g.players[0].get_buildings()
+        assert len(buildings) == 2
+        
+
+    def test_get_available_settlements1(self):
+        # Create game
+        g = Game()
+        points = g.players[0].get_available_settlements()
+        assert len(points) == 54
+
+    def test_get_available_settlements2(self):
+        # Create game
+        g = Game()
+        res = g.add_settlement(0, g.get_point(5,3), True)
+        assert res == Statuses.ALL_GOOD
+        res = g.add_settlement(0, g.get_point(3,2), True)
+        assert res == Statuses.ALL_GOOD
+
+        points = g.players[0].get_available_settlements()
+        assert len(points) == 0
+
+    def test_get_available_settlements3(self):
+        # Create game
+        g = Game()
+        res = g.add_settlement(0, g.get_point(3,5), True)
+        assert res == Statuses.ALL_GOOD
+
+        res = g.add_settlement(0, g.get_point(5,2), True)
+        assert res == Statuses.ALL_GOOD
+
+        roads = g.players[0].get_available_roads()
+        assert len(roads) == 6
+        res = g.add_road(0, g.get_point(3,5), g.get_point(3,4), True)
+        assert res == Statuses.ALL_GOOD
+
+        res = g.add_road(0, g.get_point(3,4), g.get_point(2,4), True)
+        assert res == Statuses.ALL_GOOD
+
+        points = g.players[0].get_available_settlements()
+        assert len(points) == 1
+
+    def test_get_available_roads1(self):
+        g = Game()
+
+        res = g.add_settlement(0, g.get_point(0,0), True)
+        assert res == Statuses.ALL_GOOD
+        res = g.add_road(0, g.get_point(0,0), g.get_point(0,1), True)
+        assert res == Statuses.ALL_GOOD
+
+        roads = g.players[0].get_available_roads()
+        logging.info("ROADS %s" % roads)
+
+        assert len(roads) == 2
+
+    def test_get_available_roads2(self):
+        g = Game()
+        res = g.add_settlement(0, g.get_point(3,5), True)
+        assert res == Statuses.ALL_GOOD
+        res = g.add_settlement(0, g.get_point(3,2), True)
+        assert res == Statuses.ALL_GOOD
+        roads = g.players[0].get_available_roads()
+        logging.info("ROADS %s" % roads)
+        assert len(roads) == 6
+
+    def test_get_available_roads3(self):
+        g = Game()
+
+        res = g.add_settlement(0, g.get_point(0,0), True)
+        assert res == Statuses.ALL_GOOD
+        res = g.add_road(0, g.get_point(0,0), g.get_point(0,1), True)
+        assert res == Statuses.ALL_GOOD
+
+        res = g.add_settlement(0, g.get_point(3,5), True)
+        assert res == Statuses.ALL_GOOD
+
+        roads = g.players[0].get_available_roads()
+        logging.info("ROADS %s" % roads)
+
+        assert len(roads) == 5
+
+
+    def test_upgrade_settlement(self):
+        g = Game()
+
+        res = g.add_settlement(0, g.get_point(5,3), True)
+        assert res == Statuses.ALL_GOOD
+
+        buildings = g.players[0].get_buildings()
+        assert len(buildings) == 1
+
+        assert buildings[0].type == Building.BUILDING_SETTLEMENT
+
+        res = g.add_city(buildings[0].point, 0)
+        assert res == Statuses.ERR_CARDS
+
+        g.players[0].add_cards([
+            ResCard.Wheat,
+            ResCard.Wheat,
+            ResCard.Ore,
+            ResCard.Ore,
+            ResCard.Ore
+        ])
+
+        res = g.add_city(buildings[0].point, 1)
+        assert res == Statuses.ERR_BAD_OWNER
+
+        res = g.add_city(buildings[0].point, 0)
+        assert res == Statuses.ALL_GOOD
+
+        buildings = g.players[0].get_buildings()
+        assert len(buildings) == 1
+
+        assert buildings[0].type == Building.BUILDING_CITY
