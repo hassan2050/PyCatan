@@ -9,6 +9,8 @@ class ResCard(Enum):
     Ore = 2
     Sheep = 3
     Wheat = 4
+    def __repr__(self):
+      return self.name
 
 # The different types of developement cards
 class DevCard(Enum):
@@ -19,3 +21,5 @@ class DevCard(Enum):
     Knight = 2
     Monopoly = 3
     YearOfPlenty = 4
+    def __repr__(self):
+      return self.name
