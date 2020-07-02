@@ -195,7 +195,7 @@ class Game:
 
     # changes a settlement on the board for a city
     def add_city(self, point, player):
-        status = self.board.upgrade_settlement(player, r, i)
+        status = self.board.upgrade_settlement(player, point)
 
         if status == Statuses.ALL_GOOD:
             # checks if the player won
