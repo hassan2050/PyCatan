@@ -184,11 +184,11 @@ if __name__ == "__main__":
     g = Game()
     br = BoardRenderer(g.board, [50, 10])
     # Add some settlements
-    g.add_settlement(player=0, point=g.board.points[0][0], is_starting=True)
-    g.add_settlement(player=1, point=g.board.points[2][3], is_starting=True)
-    g.add_settlement(player=2, point=g.board.points[4][1], is_starting=True)
+    g.add_settlement(player=0, point=g.get_point(0,0), is_starting=True)
+    g.add_settlement(player=1, point=g.get_point(2,3), is_starting=True)
+    g.add_settlement(player=2, point=g.get_point(4,1), is_starting=True)
     # Add some roads
-    g.add_road(player=0, start=g.board.points[0][0], end=g.board.points[0][1], is_starting=True)
-    g.add_road(player=1, start=g.board.points[2][3], end=g.board.points[2][2], is_starting=True)
-    g.add_road(player=2, start=g.board.points[4][1], end=g.board.points[4][0], is_starting=True)
+    g.add_road(player=0, start=g.get_point(0,0), end=g.get_point(0,1), is_starting=True)
+    g.add_road(player=1, start=g.get_point(2,3), end=g.get_point(2,2), is_starting=True)
+    g.add_road(player=2, start=g.get_point(4,1), end=g.get_point(4,0), is_starting=True)
     br.render()
