@@ -7,6 +7,8 @@ from pycatan.card import ResCard, DevCard
 from pycatan.tile import Tile
 from pycatan.point import Point
 
+import logging
+
 # used to shuffle the deck of tiles
 import random
 
@@ -51,7 +53,7 @@ class Board(object):
                     # checks if any tiles have the right number
                     for current_tile in tiles:
 
-                        print(self.robber, current_tile)
+                        #logging.debug("Robber %s %s" % (self.robber, current_tile))
                         # makes sure the robber isn't there
                         if self.robber is current_tile:
                             # skips this tile
@@ -83,6 +85,14 @@ class Board(object):
     # since roads record their own position and are not in self.points
     def add_road(self, road):
         self.roads.append(road)
+
+    def get_road(self, p1, p2):
+      for r in self.roads:
+        if (r.point_one == p1 and r.point_two == p2):
+          return r
+        if (r.point_one == p2 and r.point_two == p1):
+          return r
+      return None
 
     # upgrades an existing settlement to a city
     def upgrade_settlement(self, player, point):
@@ -133,7 +143,7 @@ class Board(object):
 
         return buildings
 
-    # moves the robber to a givne coord
+    # moves the robber to a given coord
     def move_robber(self, tile_pos):
         self.robber = tile_pos
 
