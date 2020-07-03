@@ -4,7 +4,10 @@
 
 import os, sys, string, time, logging, argparse
 import pycatan
-import board_renderer
+try:
+  import board_renderer
+excpet ImportError:
+  board_renderer = None
 import random
 
 import random_ai
@@ -97,8 +100,9 @@ class CatanSim:
     
 
 def start():
-  br = board_renderer.BoardRenderer(None, [60, 10])
-  br.clear()
+  if board_renderer:
+    br = board_renderer.BoardRenderer(None, [60, 10])
+    br.clear()
 
   players = []
   players.append(random_ai.RandomPlayer("random1a"))
