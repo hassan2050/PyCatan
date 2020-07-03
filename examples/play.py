@@ -54,7 +54,7 @@ class CatanSim:
     return pycatan.Statuses.ALL_GOOD
 
   def start(self, br):
-    br.board = self.game.board
+    if br: br.board = self.game.board
 
     self.mode = "choose starting"
     for player in self.game.players:
@@ -103,6 +103,8 @@ def start():
   if board_renderer:
     br = board_renderer.BoardRenderer(None, [60, 10])
     br.clear()
+  else:
+  	br = None
 
   players = []
   players.append(random_ai.RandomPlayer("random1a"))
