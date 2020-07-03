@@ -30,6 +30,13 @@ class Player:
         self.num_roads = 15
         self.num_settlements = 5
         self.num_cities = 4
+
+        self.controller = None
+        self.name = None
+
+    def __repr__(self): return "P%s" % self.num
+
+    def get_num(self): return self.num
         
     def dict(self):
       d = {}
@@ -391,27 +398,7 @@ class Player:
     def print_cards(cards):
         print("[")
         for c in cards:
-
-            card_name = ""
-
-            if c == ResCard.Wood:
-                card_name = "Wood"
-
-            elif c == ResCard.Sheep:
-                card_name = "Sheep"
-
-            elif c == ResCard.Brick:
-                card_name = "Brick"
-
-            elif c == ResCard.Wheat:
-                card_name = "Wheat"
-
-            elif c == ResCard.Ore:
-                card_name = "Ore"
-
-            else:
-                print("INVALID CARD %s" % c)
-                continue
+            card_name = card.name
 
             if cards.index(c) < len(cards) - 1:
                 card_name += ","
@@ -427,6 +414,9 @@ class Player:
       roads = self.get_roads()
       for road in roads:
         for p1 in (road.point_one, road.point_two):
+          if p1.building and p1.building.owner != self.num:
+            ## skip points that dead-end into a opponent's building
+            continue
           for p2 in p1.connected_points:
             if not self.game.board.get_road(p1, p2):
               if (p2, p1) not in available_roads:

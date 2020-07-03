@@ -107,7 +107,7 @@ class Board(object):
 
     # upgrades an existing settlement to a city
     def upgrade_settlement(self, player, point):
-        if self.game.players[player].num_cities == 0: return Statuses.ERR_OUTOFBUILDINGS
+        if player.num_cities == 0: return Statuses.ERR_OUTOFBUILDINGS
 
         # Get building at point
         building = point.building
@@ -118,7 +118,7 @@ class Board(object):
 
         # checks the settlement is controlled by the correct player
         # if no player is specified, uses the current controlling player
-        if building.owner != player:
+        if building.owner != player.get_num():
             return Statuses.ERR_BAD_OWNER
 
         # checks it is a settlement and not a city
@@ -133,20 +133,20 @@ class Board(object):
             ResCard.Ore,
             ResCard.Ore
         ]
-        if not self.game.players[player].has_cards(needed_cards):
+        if not player.has_cards(needed_cards):
             return Statuses.ERR_CARDS
 
         # removes the cards
-        self.game.players[player].remove_cards(needed_cards)
+        player.remove_cards(needed_cards)
         # changes the settlement to a city
         point.building = City(building.owner, building.point)
         building = point.building
 
         # adds another victory point
-        self.game.players[player].victory_points += 1
+        player.victory_points += 1
 
-        self.game.players[player].num_cities -= 1
-        self.game.players[player].num_settlements += 1
+        player.num_cities -= 1
+        player.num_settlements += 1
 
         return Statuses.ALL_GOOD
 
@@ -254,11 +254,9 @@ class Board(object):
 
     def load(self, d):
       for tile_data in d['tiles']:
-        print (tile_data)
         t = self.game.get_tile(tile_data['position'])
-        t.token_num = tile_data['num']
-        t.type = getattr(TileType, tile_data['tile'])
-        print (t)
+        t.token_num = tile_data['token_num']
+        t.type = getattr(TileType, tile_data['type'])
           
       bpoints = self.get_all_points()
       for point in bpoints:

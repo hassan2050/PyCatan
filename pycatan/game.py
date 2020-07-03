@@ -49,7 +49,7 @@ class Game:
     # creates a new settlement belong to the player at the coodinates
     def add_settlement(self, player, point, is_starting=False):
         # builds the settlement
-        status = self.players[player].build_settlement(point=point, is_starting=is_starting)
+        status = player.build_settlement(point=point, is_starting=is_starting)
         # If successful, check if the player has now won
         if status == Statuses.ALL_GOOD:
           self.check_for_win()
@@ -59,7 +59,7 @@ class Game:
     # builds a road going from point start to point end
     def add_road(self, player, start, end, is_starting=False):
         # builds the road
-        stat = self.players[player].build_road(start=start, end=end, is_starting=is_starting)
+        stat = player.build_road(start=start, end=end, is_starting=is_starting)
         # checks for a new longest road segment
         self.set_longest_road()
         # returns the status
@@ -76,13 +76,13 @@ class Game:
             ResCard.Ore,
             ResCard.Sheep
         ]
-        if not self.players[player].has_cards(needed_cards):
+        if not player.has_cards(needed_cards):
             return Statuses.ERR_CARDS
         # removes the cards
-        self.players[player].remove_cards(needed_cards)
+        player.remove_cards(needed_cards)
         # gives the player a dev card
         card = self.dev_deck[0]
-        self.players[player].add_dev_card(card)
+        player.add_dev_card(card)
         # removes that dev card from the deck
         del self.dev_deck[0]
 
@@ -98,19 +98,19 @@ class Game:
     def trade(self, player_one, player_two, cards_one, cards_two):
         # check if they players have the cards they are trading
         # Needs to do this before deleting because one might have the cards while the other does not
-        if not self.players[player_one].has_cards(cards_one):
+        if not player_one.has_cards(cards_one):
             return Statuses.ERR_CARDS
 
-        elif not self.players[player_two].has_cards(cards_two):
+        elif not player_two.has_cards(cards_two):
             return Statuses.ERR_CARDS
 
         else:
             # removes the cards
-            self.players[player_one].remove_cards(cards_one)
-            self.players[player_two].remove_cards(cards_two)
+            player_one.remove_cards(cards_one)
+            player_two.remove_cards(cards_two)
             # add the new cards
-            self.players[player_one].add_cards(cards_two)
-            self.players[player_two].add_cards(cards_one)
+            player_one.add_cards(cards_two)
+            player_two.add_cards(cards_one)
             return Statuses.ALL_GOOD
 
     # moves the robber
@@ -128,7 +128,7 @@ class Game:
             for p in points:
                 if p != None and p.building != None:
                     # Check the victim owns the settlement/city
-                    if p.building.owner == victim:
+                    if p.building.owner == victim.get_num():
                         has_settlement = True
 
             if not has_settlement:
@@ -139,11 +139,11 @@ class Game:
         # takes a random card from the victim
         if victim != None:
             # removes a random card from the victim
-            if self.players[victim].cards:
-              card = random.choice(self.players[victim].cards)
-              self.players[victim].remove_cards([card])
+            if victim.cards:
+              card = random.choice(victim.cards)
+              victim.remove_cards([card])
               # adds it to the player
-              self.players[player].add_cards([card])
+              player.add_cards([card])
 
         return Statuses.ALL_GOOD
 
@@ -151,7 +151,7 @@ class Game:
     # either by 4 for 1 or using a harbor
     def trade_to_bank(self, player, cards, request):
         # makes sure the player has the cards
-        if not self.players[player].has_cards(cards):
+        if not player.has_cards(cards):
             return Statuses.ERR_CARDS
         # checks all the cards are the same type
         card_type = cards[0]
@@ -162,7 +162,7 @@ class Game:
         if len(cards) != 4:
             # checks if the player has a settlement on the right type of harbor
             has_harbor = False
-            harbor_types = self.players[player].get_connected_harbor_types()
+            harbor_types = player.get_connected_harbor_types()
             print(harbor_types)
             for h_type in harbor_types:
                 if Harbor.get_card_from_harbor_type(h_type) == card_type and len(cards) == 2:
@@ -176,9 +176,9 @@ class Game:
                 return Statuses.ERR_HARBOR
 
         # removes cards
-        self.players[player].remove_cards(cards)
+        player.remove_cards(cards)
         # adds the new card
-        self.players[player].add_cards([request])
+        player.add_cards([request])
 
         return Statuses.ALL_GOOD
 
@@ -193,7 +193,7 @@ class Game:
             # and at least 5 road segments long
             if p.longest_road_length > longest and p.longest_road_length >= 5:
                 longest = p.longest_road_length
-                owner = self.players.index(p)
+                owner = p
 
         if self.longest_road_owner != owner:
             self.longest_road_owner = owner
@@ -209,7 +209,7 @@ class Game:
       return False
 
     # changes a settlement on the board for a city
-    def add_city(self, point, player):
+    def upgrade_settlement(self, point, player):
         status = self.board.upgrade_settlement(player, point)
 
         if status == Statuses.ALL_GOOD:
@@ -222,7 +222,7 @@ class Game:
     # the required args will vary between different dev cards
     def use_dev_card(self, player, card, args):
         # checks the player has the development card
-        if not self.players[player].has_dev_cards([card]):
+        if not player.has_dev_cards([card]):
             return Statuses.ERR_CARDS
 
         # applies the action
@@ -247,7 +247,7 @@ class Game:
             other_road_is_isolated = False
 
             for r in road_names:
-                location_status = self.players[player].road_location_is_valid(args[r]['start'], args[r]['end'])
+                location_status = player.road_location_is_valid(args[r]['start'], args[r]['end'])
 
                 # if the road location is not OK
                 # since the player can build two roads, some
@@ -280,7 +280,7 @@ class Game:
 
             # builds the roads
             for r in road_names:
-                self.board.add_road(Road(owner=player, point_one=args[r]["start"], point_two=args[r]["end"]))
+                self.board.add_road(Road(owner=player.get_num(), point_one=args[r]["start"], point_two=args[r]["end"]))
 
         elif card == DevCard.Knight:
             # checks there are the right arguments
@@ -290,7 +290,7 @@ class Game:
 
             # checks the victim input is valid
             if args["victim"] != None:
-                if args["victim"] < 0 or args["victim"] >= len(self.players) or args["victim"] == player:
+                if args["victim"] not in self.players or args["victim"] == player:
                     logging.error("err input2")
                     return Statuses.ERR_INPUT
 
@@ -302,19 +302,19 @@ class Game:
                 return result
 
             # adds one to the player's knight count
-            (self.players[player]).knight_cards += 1
+            player.knight_cards += 1
 
             # checks for the largest army
             if self.largest_army == None:
                 # if nobody has the largest army, the player needs at least 3 cards
-                if self.players[player].knight_cards >= 3:
+                if player.knight_cards >= 3:
                     self.largest_army = player
 
             else:
                 # the player needs to have more than anybody else
-                current_longest = self.players[self.largest_army].knight_cards
+                current_longest = self.largest_army.knight_cards
 
-                if self.players[player].knight_cards > current_longest:
+                if player.knight_cards > current_longest:
                     self.largest_army = player
             self.check_for_win()
 
@@ -330,7 +330,7 @@ class Game:
                     # removes the cards
                     p.remove_cards(cards_to_give)
                     # adds them to the user's cards
-                    self.players[player].add_cards(cards_to_give)
+                    player.add_cards(cards_to_give)
 
         elif card == DevCard.VictoryPoint:
             # players do not play developement cards, so it returns an error
@@ -342,7 +342,7 @@ class Game:
                 return Statuses.ERR_INPUT
 
             # gives the player 2 resource cards of their choice
-            self.players[player].add_cards([
+            player.add_cards([
                 args['card_one'],
                 args['card_two']
             ])
@@ -352,7 +352,7 @@ class Game:
             return Statuses.ERR_INPUT
 
         # removes the card
-        self.players[player].remove_dev_card(card)
+        player.remove_dev_card(card)
 
         return Statuses.ALL_GOOD
 

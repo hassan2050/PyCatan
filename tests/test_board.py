@@ -17,24 +17,27 @@ class TestBoard:
         # Create new game and get the board
         game = Game()
         board = game.board
+        player0 = game.players[0]
         # Make sure robber is not on the top-left tile
         board.robber = [1, 1]
         # add settlement
-        game.add_settlement(0, game.get_point(0,0), True)
+        game.add_settlement(player0, game.get_point(0,0), True)
         # give the roll
         board.add_yield(8)
         # check the board gave the cards correctly
-        assert game.players[0].has_cards([ResCard.Brick])
+        assert player0.has_cards([ResCard.Brick])
+
     def test_robber_prevents_yield(self):
         random.seed(1)
         game = Game()
         board = game.board
+        player0 = game.players[0]
         # Move robber to top-left corner
         board.robber = game.get_tile(0,0)
         # Add settlement
-        game.add_settlement(0, game.get_point(0,0), True)
+        game.add_settlement(player0, game.get_point(0,0), True)
         # Roll an 8
         board.add_yield(8)
         # Ensure the robber prevented the player from getting the card
-        assert not game.players[0].has_cards([ResCard.Brick])
+        assert not player0.has_cards([ResCard.Brick])
 

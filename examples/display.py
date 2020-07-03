@@ -12,12 +12,25 @@ import random_ai
 _version = "0.1"
 
 def start(args):
+
   g = pycatan.Game()
+  br = board_renderer.BoardRenderer(g.board, [10, 10])
+  br.clear()
+  #br.render()
+
   g.load(args.files[0])
 
-  br = board_renderer.BoardRenderer(g.board, [50, 10])
+  ## [07/02 18:26:54] ERROR    P2: build_road ERR_ISOLATED p1:Point(3,8) p2:Point(3,9)
+
+  #br.center = [35,10]
   br.render()
-  #time.sleep(1)
+  
+  player = g.players[2]
+  res = g.add_road(2, g.get_point(4,4), g.get_point(4,3))
+
+  br.center = [35,10]
+  br.render()
+
 
 
 def test():
