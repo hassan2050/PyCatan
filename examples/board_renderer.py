@@ -1,6 +1,8 @@
 from pycatan.board import Board
 from pycatan.tile_type import TileType
 from pycatan.game import Game
+from pycatan.building import *
+
 from blessings import Terminal
 import math
 
@@ -19,9 +21,11 @@ class BoardRenderer:
             self.terminal.yellow
         ]
 
-    def render(self):
+    def clear(self):
         # Clear screen
         print(self.terminal.clear())
+      
+    def render(self):
         # Render hexes
         for r in self.board.tiles:
             for h in r:
@@ -66,7 +70,11 @@ class BoardRenderer:
             position = self.terminal.move(self.center[1] + coords[1], self.center[0] + coords[0])
             # Get the owner of the point
             owner = building.owner
-            print(self.player_colors[owner] + position + "." + self.terminal.normal)
+            if building.type == BuildingType.Settlement:
+              c = '.'
+            if building.type == BuildingType.City:
+              c = 'c'
+            print(self.player_colors[owner] + position + c + self.terminal.normal)
 
     # Render a road onto the board
     def render_road(self, road_obj):
