@@ -6,7 +6,7 @@ import os, sys, string, time, logging, argparse
 import pycatan
 try:
   import board_renderer
-excpet ImportError:
+expect ImportError:
   board_renderer = None
 import random
 
