@@ -9,9 +9,9 @@ from pycatan import ResCard, DevCard, Statuses
 
 import ai_player
 
-class RandomPlayer(ai_player.AIPlayer):
+class Random2Player(ai_player.AIPlayer):
   def __init__(self, name):
-    super(RandomPlayer, self).__init__(name)
+    super(Random2Player, self).__init__(name)
 
   def choose_starting_settlement(self):
     logging.debug("%s: choose" % self.player)
@@ -185,12 +185,32 @@ class RandomPlayer(ai_player.AIPlayer):
     logging.debug("%s: move_robber" % self.player)
 
     tiles = self.game.board.get_all_tiles()
-    tile = random.choice(tiles)
+    potential_tiles = []
+    for tile in tiles:
+      w = 0.
+      if tile.type == pycatan.TileType.Desert: w = -99
+      if tile.type in ( pycatan.TileType.Fields,  pycatan.TileType.Mountains):
+        w += .5 * tile.prob()
+
+      for p in tile.points:
+        if p.building == None:
+          pass
+        elif p.building.owner == self.player.get_num():
+          w += -2. * tile.prob()
+        else:
+          w += 1. * tile.prob()
+      potential_tiles.append((w, tile))
+
+    potential_tiles.sort(key=lambda x: x[0])
+    tile = potential_tiles[-1][1]
     
     potential = []
     for p in tile.points:
       if p.building and p.building.owner != self.player.get_num():
         potential.append(p.building.owner)
+
+    ## probably should take the point leader
+    ## also, should take from the player who has resources that we need
 
     victim = None
     if potential:
