@@ -17,9 +17,31 @@ class Random2Player(ai_player.AIPlayer):
     logging.debug("%s: choose" % self.player)
 
     bpoints = [item for sublist in self.game.board.points for item in sublist]
-    random.shuffle(bpoints)
-
+    possble_points = []
     for p in bpoints:
+      if p.building: continue
+      w = 0.
+
+      #logging.info("point %s %s %s %s" % (p, len(p.tiles), len(p.connected_points), p.tiles))
+
+      for tile in p.tiles:
+        if tile.position[0] == 2 and tile.position[1] == 2:
+          w -= 5
+        w += 2. * tile.prob()
+        if tile.type in (pycatan.TileType.Fields, pycatan.TileType.Mountains):
+          w += .25 * tile.prob()
+        if tile.type in (pycatan.TileType.Pasture,):
+          w += .15 * tile.prob()
+
+      for tile in p.tiles:
+        if tile.position[0] == 2 and tile.position[1] == 2:
+          w = w / 2.
+      possble_points.append((w, p))
+
+    possble_points.sort(key=lambda x: x[0])
+    possble_points = list(reversed(possble_points))
+
+    for w,p in possble_points:
       if p.building: continue
 
       r = self.game.add_settlement(self.player, p, is_starting=True)

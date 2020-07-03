@@ -26,7 +26,7 @@ def start(args):
   br.render()
   
   player = g.players[2]
-  res = g.add_road(2, g.get_point(4,4), g.get_point(4,3))
+  res = g.add_road(player, g.get_point(4,4), g.get_point(4,3))
 
   br.center = [35,10]
   br.render()
