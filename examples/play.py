@@ -14,13 +14,16 @@ import random_ai
 import random2_ai
 import hayden_ai
 
+import catanlog
+
 _version = "0.1"
 
 class CatanSim:
   def __init__(self, players):
-    self.game = pycatan.Game()
+    self.log = catanlog.CatanLog()
+    self.game = pycatan.Game(self.log)
     logging.debug("%s players" % len(self.game.players))
-    self.currentPlayer = None
+
     self.mode = "init"
     
     players = players[:]
@@ -29,13 +32,18 @@ class CatanSim:
     for n,player in enumerate(self.game.players):
       player.controller = players[n]
       player.controller.attach(player)
+
+    if self.log:
+      self.log.log_game_start(self.game.players, [], [], [])
       
 
   def roll_dice(self, player):
-    if self.mode != "preroll": return pycatan.Statuses.ERR_INPUT
     self.mode = "rolled"
     roll = self.game.get_roll()
+
     logging.debug("rolled %d" % roll)
+
+    if self.log: self.log.log_player_roll(player, roll)
 
     if roll == 7:
       ## card check
@@ -59,11 +67,13 @@ class CatanSim:
 
     self.mode = "choose starting"
     for player in self.game.players:
-      self.currentPlayer = player
+      self.game.start_turn(player)
       player.controller.choose_starting_settlement()
+      self.game.finished_turn(player)
     for player in reversed(self.game.players):
-      self.currentPlayer = player
+      self.game.start_turn(player)
       player.controller.choose_starting_settlement()
+      self.game.finished_turn(player)
 
     #br.render()
     #time.sleep(1)
@@ -77,13 +87,19 @@ class CatanSim:
 
       for player in self.game.players:
         self.mode = "preroll"
-        self.currentPlayer = player
+        self.game.start_turn(player)
+
         player.controller.take_turn(self)
+        if self.log: self.log.log_player_ends_turn(player)
         
+        self.game.finished_turn(player)
+
         if self.game.has_ended: break
 
         #br.render()
         #time.sleep(1)
+
+    if self.log: self.log.log_player_wins(self.game.winner)
 
     self.mode = "finished"
     #br.render()
@@ -128,6 +144,8 @@ def start():
     for p in players:
       stats.append("%s: %.1f" % (p.name, 100.*p.win / (p.win+p.lose)))
     logging.info(' '.join(stats))
+
+    #break
   
 def test():
   logging.warn("Testing")

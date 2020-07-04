@@ -10,16 +10,22 @@ import logging
 import random
 import math
 
+class CatanError(Exception):
+  def __init__(self, errcode):
+    self.errcode = errcode
+
 class Game:
 
     # initializes the  game
-    def __init__(self, num_of_players=3, on_win=None, starting_board=False, points_to_win=10):
+    def __init__(self, log=None, num_of_players=3, on_win=None, starting_board=False, points_to_win=10):
+        self.log = log
         # creates a board
         self.board = DefaultBoard(game=self);
         # creates players
         self.players = []
         for i in range(num_of_players):
             self.players.append(Player(num=i, game=self))
+        self.currentPlayer = None
 
         self.points_to_win = points_to_win
         # Set onWin method
@@ -46,12 +52,14 @@ class Game:
         self.has_ended = False
         self.winner = None
 
+
     # creates a new settlement belong to the player at the coodinates
     def add_settlement(self, player, point, is_starting=False):
         # builds the settlement
         status = player.build_settlement(point=point, is_starting=is_starting)
         # If successful, check if the player has now won
         if status == Statuses.ALL_GOOD:
+          if self.log: self.log.log_player_buys_settlement(player, point)
           self.check_for_win()
 
         return status
@@ -61,6 +69,7 @@ class Game:
         # builds the road
         stat = player.build_road(start=start, end=end, is_starting=is_starting)
         # checks for a new longest road segment
+        if self.log: self.log.log_player_buys_road(player, (start, end))
         self.set_longest_road()
         # returns the status
         return stat
@@ -88,6 +97,8 @@ class Game:
 
         if card == DevCard.VictoryPoint:
           self.check_for_win()
+        if self.log: self.log.log_player_buys_dev_card(player)
+
         return Statuses.ALL_GOOD
 
     # gives players the proper cards for a given roll
@@ -136,6 +147,7 @@ class Game:
 
         # moves the robber
         self.board.move_robber(tile)
+
         # takes a random card from the victim
         if victim != None:
             # removes a random card from the victim
@@ -145,6 +157,10 @@ class Game:
               # adds it to the player
               player.add_cards([card])
 
+              if self.log: self.log.log_player_moves_robber_and_steals(player, tile, victim)
+        else:
+          if self.log: self.log.log_player_moves_robber_and_steals(player, tile, None)
+          
         return Statuses.ALL_GOOD
 
     # trades cards from a player to the bank
@@ -180,6 +196,9 @@ class Game:
         # adds the new card
         player.add_cards([request])
 
+        ## log trade
+        if self.log: self.log.log_player_trades_with_bank(player, cards, request)
+
         return Statuses.ALL_GOOD
 
     # gives the longest road to the correct player
@@ -214,6 +233,7 @@ class Game:
 
         if status == Statuses.ALL_GOOD:
             # checks if the player won
+            if self.log: self.log.log_player_buys_city(player, point)
             self.check_for_win()
 
         return status
@@ -282,6 +302,10 @@ class Game:
             for r in road_names:
                 self.board.add_road(Road(owner=player.get_num(), point_one=args[r]["start"], point_two=args[r]["end"]))
 
+            self.played_devcard = True
+            if self.log: self.log.log_player_plays_road_builder(player, (args[road_names[0]]["start"], args[road_names[0]]["end"]), (args[road_names[1]]["start"], args[road_names[1]]["end"]))
+
+
         elif card == DevCard.Knight:
             # checks there are the right arguments
             if not ("robber_tile" in args and "victim" in args):
@@ -301,6 +325,8 @@ class Game:
                 logging.error("err input3")
                 return result
 
+            if self.log: self.log.log_player_plays_knight(player, args["robber_tile"], args["victim"])
+
             # adds one to the player's knight count
             player.knight_cards += 1
 
@@ -316,6 +342,7 @@ class Game:
 
                 if player.knight_cards > current_longest:
                     self.largest_army = player
+            self.played_devcard = True
             self.check_for_win()
 
         elif card == DevCard.Monopoly:
@@ -331,6 +358,8 @@ class Game:
                     p.remove_cards(cards_to_give)
                     # adds them to the user's cards
                     player.add_cards(cards_to_give)
+            self.played_devcard = True
+            if self.log: self.log.log_player_plays_monopoly(player, args["card_type"])
 
         elif card == DevCard.VictoryPoint:
             # players do not play developement cards, so it returns an error
@@ -347,6 +376,8 @@ class Game:
                 args['card_two']
             ])
 
+            self.played_devcard = True
+            if self.log: self.log.log_player_plays_year_of_plenty(player, args["card_one"], args["card_two"])
         else:
             logging.error("error3")
             return Statuses.ERR_INPUT
@@ -358,7 +389,12 @@ class Game:
 
     # simulates 2 dice rolling
     def get_roll(self):
-        return round(random.random() * 6) + round(random.random() * 6)
+      if self.rolled_dice: 
+        raise CatanError(pycatan.Statuses.ERR_INPUT)
+      #roll = round(random.random() * 6) + round(random.random() * 6)
+      roll = random.randint(1,6) + random.randint(1,6)
+      self.rolled_dice = True
+      return roll
 
     def get_point(self, i, j=None):
       if j is None:
@@ -369,7 +405,16 @@ class Game:
       if j is None:
         return self.board.tiles[i[0]][i[1]]
       return self.board.tiles[i][j]
-    
+
+    def start_turn(self, player):
+      self.currentPlayer = player
+      self.rolled_dice = False
+      self.played_devcard = False
+
+    def finished_turn(self, player):
+      self.currentPlayer = None
+      pass
+
     def save(self):
       d = {}
       d['board'] = self.board

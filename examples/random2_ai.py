@@ -82,19 +82,19 @@ class Random2Player(ai_player.AIPlayer):
 
     while 1:
       actions = []
-      if self.player.has_cards([ResCard.Wood, ResCard.Brick]):
+      if self.player.has_cards(pycatan.card.roadBuild):
         ## check if there are any available spots
         available_roads = self.player.get_available_roads()
         if available_roads and self.player.num_roads > 0:
           actions.append((2, ("build_road", available_roads)))
 
-      if self.player.has_cards([ResCard.Wood, ResCard.Brick, ResCard.Wheat, ResCard.Sheep]):
+      if self.player.has_cards(pycatan.card.settlementBuild):
         ## check if there are any available spots
         available_points = self.player.get_available_settlements()
         if available_points and self.player.num_settlements > 0:
           actions.append((3, ("build_settlement", available_points)))
 
-      if self.player.has_cards([ResCard.Ore, ResCard.Wheat, ResCard.Sheep]):
+      if self.player.has_cards(pycatan.card.devBuild):
         if len(self.game.dev_deck) > 0:
           actions.append((1, ("build_dev", None)))
 
@@ -107,7 +107,7 @@ class Random2Player(ai_player.AIPlayer):
         if cards:
           actions.append((2, ("trade_to_bank", cards)))
 
-      if self.player.has_cards([ResCard.Ore, ResCard.Ore, ResCard.Ore, ResCard.Wheat, ResCard.Wheat]):
+      if self.player.has_cards(pycatan.card.cityBuild):
         bpoints = [item for sublist in self.game.board.points for item in sublist]
         settlements = [building for building in self.player.get_buildings() if building.type == pycatan.BuildingType.Settlement]
         if settlements and self.player.num_cities > 0:
@@ -158,7 +158,23 @@ class Random2Player(ai_player.AIPlayer):
 
       elif cmd == "build_settlement":
         available_points = action[1]
-        point = random.choice(available_points)
+
+        ranked_settlements = []
+        for point in available_points:
+          w = 0.
+          for tile in point.tiles:
+            w += 2. * tile.prob()
+
+            if tile.type in (pycatan.TileType.Fields, pycatan.TileType.Mountains):
+              w += .25 * tile.prob()
+            if tile.type in (pycatan.TileType.Pasture,):
+              w += .15 * tile.prob()
+          ranked_settlements.append((w, point))
+        ranked_settlements.sort(key=lambda x: x[0])
+
+        point= ranked_settlements[-1][1]
+        #point = random.choice(available_points)
+
         logging.debug("%s: build_settlement %s" % (self.player, point))
         res = self.game.add_settlement(self.player, point)
         if res != Statuses.ALL_GOOD: 
@@ -225,10 +241,35 @@ class Random2Player(ai_player.AIPlayer):
           error_actions.append("use_dev_card")
         
       elif cmd == "trade_to_bank":
-        card = random.choice(action[1])
-        possble_cards = [ResCard.Wood, ResCard.Brick, ResCard.Ore, ResCard.Sheep, ResCard.Wheat]
-        possble_cards.remove(card)
-        request = random.choice(possble_cards)
+        def Diff(li1, li2): 
+          li_dif = [i for i in li2 if i not in li1]
+          return li_dif
+        
+        possible_requests = []
+        for card in action[1]:
+          cards = self.player.cards[:]
+          for i in range(4): cards.remove(card)
+
+          for w,buildType in ((3, pycatan.card.settlementBuild), (4,pycatan.card.cityBuild), 
+                            (2,pycatan.card.roadBuild), (1,pycatan.card.devBuild)):
+            d1 = Diff(cards, buildType)
+            if len(d1) == 1:
+              request = d1[0]
+              if card != request:
+                possible_requests.append((w, card, request))
+
+        if len(possible_requests):
+          #logging.info(possible_requests)
+          possible_requests.sort(key=lambda x: x[0])
+          card = possible_requests[-1][1]
+          request = possible_requests[-1][2]
+
+        else:
+          card = random.choice(action[1])
+          possble_cards = [ResCard.Wood, ResCard.Brick, ResCard.Ore, ResCard.Sheep, ResCard.Wheat]
+          possble_cards.remove(card)
+          request = random.choice(possble_cards)
+
         res = self.game.trade_to_bank(self.player, [card]*4, request)
         if res != Statuses.ALL_GOOD: 
           logging.error("%s: trade_to_bank %s %s %s" % (self.player, res, card, request))

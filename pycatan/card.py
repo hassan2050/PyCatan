@@ -13,6 +13,11 @@ class ResCard(Enum):
       return self.name
     def dict(self): return self.name
 
+settlementBuild = (ResCard.Wood, ResCard.Brick, ResCard.Sheep, ResCard.Wheat)
+cityBuild = (ResCard.Ore, ResCard.Ore, ResCard.Ore, ResCard.Wheat, ResCard.Wheat)
+devBuild = (ResCard.Wheat, ResCard.Sheep, ResCard.Ore)
+roadBuild = (ResCard.Wood, ResCard.Brick)
+
 # The different types of developement cards
 class DevCard(Enum):
 

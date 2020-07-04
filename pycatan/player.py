@@ -32,9 +32,15 @@ class Player:
         self.num_cities = 4
 
         self.controller = None
-        self.name = None
+        self.name = "P%s"%self.num
 
     def __repr__(self): return "P%s" % self.num
+
+    @property
+    def color(self): return "P%s" % self.num
+
+    @property
+    def seat(self): return self.num
 
     def get_num(self): return self.num
         
