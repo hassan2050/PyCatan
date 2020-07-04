@@ -284,7 +284,7 @@ class Game:
 
         elif card == DevCard.Knight:
             # checks there are the right arguments
-            if not ("robber_pos" in args and "victim" in args):
+            if not ("robber_tile" in args and "victim" in args):
                 logging.error("err input1")
                 return Statuses.ERR_INPUT
 
@@ -295,7 +295,7 @@ class Game:
                     return Statuses.ERR_INPUT
 
             # moves the robber
-            result = self.move_robber(tile=args["robber_pos"], player=player, victim=args["victim"])
+            result = self.move_robber(tile=args["robber_tile"], player=player, victim=args["victim"])
 
             if result != Statuses.ALL_GOOD:
                 logging.error("err input3")

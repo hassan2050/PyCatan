@@ -58,6 +58,23 @@ class Random2Player(ai_player.AIPlayer):
 
     logging.debug("%s: %s" % (self.player, self.player.cards))
 
+    ## before rolling the dice, if the robber is on one of your tiles and you have a knight card, play it.
+    if self.game.board.robber:
+      tile = self.game.board.robber
+
+      if tile.type != pycatan.TileType.Desert:
+        robber_flag = False
+        for p in tile.points:
+          if p.building and p.building.owner == self.player.get_num():
+            robber_flag = True
+        if DevCard.Knight in self.player.dev_cards:
+          (tile, victim) = self.move_robber(sim)
+          args['robber_tile'] = tile
+          args['victim'] = victim
+          res = self.game.use_dev_card(self.player, card, args)
+          if res != Statuses.ALL_GOOD: 
+            logging.error("%s: use_dev_card2 %s %s %s" % (self.player, res.name, card.name, args))
+
     sim.roll_dice(self.player)
 
     error_actions = []
@@ -91,10 +108,7 @@ class Random2Player(ai_player.AIPlayer):
 
       if self.player.has_cards([ResCard.Ore, ResCard.Ore, ResCard.Ore, ResCard.Wheat, ResCard.Wheat]):
         bpoints = [item for sublist in self.game.board.points for item in sublist]
-        settlements = []
-        for p in bpoints:
-          if p.building and p.building.owner == self.player.get_num() and p.building.type == pycatan.BuildingType.Settlement:
-            settlements.append(p)
+        settlements = [building for building in self.player.get_buildings() if building.type == pycatan.BuildingType.Settlement]
         if settlements and self.player.num_cities > 0:
           actions.append(("upgrade_settlement", settlements))
 
@@ -146,10 +160,26 @@ class Random2Player(ai_player.AIPlayer):
         assert res == Statuses.ALL_GOOD
 
       elif cmd == "upgrade_settlement":
-        available_points = action[1]
-        point = random.choice(available_points)
-        logging.debug("%s: upgrade_settlement %s" % (self.player, point))
-        res = self.game.upgrade_settlement(point, self.player)
+        available_settlements = action[1]
+        
+        ranked_settlements = []
+        for building in available_settlements:
+          point = building.point
+          w = 0.
+          for tile in point.tiles:
+            w += 2. * tile.prob()
+
+            if tile.type in (pycatan.TileType.Fields, pycatan.TileType.Mountains):
+              w += .25 * tile.prob()
+            if tile.type in (pycatan.TileType.Pasture,):
+              w += .15 * tile.prob()
+          ranked_settlements.append((w, building))
+        ranked_settlements.sort(key=lambda x: x[0])
+
+        settlement = ranked_settlements[-1][1]
+
+        logging.debug("%s: upgrade_settlement %s" % (self.player, settlement))
+        res = self.game.upgrade_settlement(settlement.point, self.player)
         if res != Statuses.ALL_GOOD: 
           logging.error("%s: upgrade_settlement %s" % (self.player, res))
           error_actions.append("upgrade_settlement")
@@ -170,7 +200,7 @@ class Random2Player(ai_player.AIPlayer):
           args['card_two'] = random.choice([ResCard.Wood, ResCard.Brick, ResCard.Ore, ResCard.Sheep, ResCard.Wheat])
         elif card == DevCard.Knight:
           (tile, victim) = self.move_robber(sim)
-          args['robber_pos'] = tile
+          args['robber_tile'] = tile
           args['victim'] = victim
         elif card == DevCard.Monopoly:
           args['card_type'] = random.choice([ResCard.Wood, ResCard.Brick, ResCard.Ore, ResCard.Sheep, ResCard.Wheat])

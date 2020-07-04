@@ -148,7 +148,7 @@ class RandomPlayer(ai_player.AIPlayer):
           args['card_two'] = random.choice([ResCard.Wood, ResCard.Brick, ResCard.Ore, ResCard.Sheep, ResCard.Wheat])
         elif card == DevCard.Knight:
           (tile, victim) = self.move_robber(sim)
-          args['robber_pos'] = tile
+          args['robber_tile'] = tile
           args['victim'] = victim
         elif card == DevCard.Monopoly:
           args['card_type'] = random.choice([ResCard.Wood, ResCard.Brick, ResCard.Ore, ResCard.Sheep, ResCard.Wheat])

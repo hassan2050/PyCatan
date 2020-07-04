@@ -67,12 +67,12 @@ class CatanSim:
     #br.render()
     #time.sleep(1)
 
-    round = 0
+    self.round = 0
     while not self.game.has_ended:
-      round += 1
+      self.round += 1
       scores = [p.get_VP(include_dev=True) for p in self.game.players]
 
-      logging.debug("Round %d: %s" % (round, scores))
+      logging.debug("Round %d: %s" % (self.round, scores))
 
       for player in self.game.players:
         self.mode = "preroll"
@@ -87,8 +87,8 @@ class CatanSim:
     self.mode = "finished"
     #br.render()
     #time.sleep(.1)
-    scores = [p.get_VP(include_dev=True) for p in self.game.players]
-    logging.info("Round %d: %s" % (round, scores))
+    #scores = [p.get_VP(include_dev=True) for p in self.game.players]
+    #logging.info("Round %d: %s" % (round, scores))
 
     for p in self.game.players:
       if p.get_VP(include_dev=True) >= self.game.points_to_win:
@@ -118,10 +118,14 @@ def start():
     ngames += 1 
 
     stats = []
-    stats.append("%s" % ngames)
+
+    scores = [p.get_VP(include_dev=True) for p in c.game.players]
+    stats.append("Round %d: %s" % (c.round, scores))
+
+    stats.append("#games: %s" % ngames)
     for p in players:
       stats.append("%s: %.1f" % (p.name, 100.*p.win / (p.win+p.lose)))
-    logging.info(stats)
+    logging.info(' '.join(stats))
   
 def test():
   logging.warn("Testing")

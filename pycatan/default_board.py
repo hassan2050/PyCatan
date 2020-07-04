@@ -25,7 +25,7 @@ class DefaultBoard(Board):
                 temp_tiles[-1].append(new_tile)
                 # Remove the token if it is the desert
                 if new_tile.type == TileType.Desert:
-                    self.robber = [r, i]
+                    self.robber = new_tile
                 else:
                     new_tile.token_num = token_deck.pop()
 

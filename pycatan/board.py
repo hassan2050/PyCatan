@@ -162,8 +162,8 @@ class Board(object):
         return buildings
 
     # moves the robber to a given coord
-    def move_robber(self, tile_pos):
-        self.robber = tile_pos
+    def move_robber(self, tile):
+        self.robber = tile
 
     def __repr__(self):
         return ("Board Object")
