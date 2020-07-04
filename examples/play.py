@@ -20,7 +20,8 @@ _version = "0.1"
 
 class CatanSim:
   def __init__(self, players):
-    self.log = catanlog.CatanLog()
+    #self.log = catanlog.CatanLog()
+    self.log = None
     self.game = pycatan.Game(self.log)
     logging.debug("%s players" % len(self.game.players))
 
@@ -126,8 +127,8 @@ def start():
   players = []
   players.append(random_ai.RandomPlayer("random_ai"))
   players.append(hayden_ai.Random2Player("hayden_ai"))
-  players.append(random_ai.RandomPlayer("random_ai"))
-  #players.append(random2_ai.Random2Player("scott_ai"))
+  #players.append(random_ai.RandomPlayer("random_ai"))
+  players.append(random2_ai.Random2Player("scott_ai"))
 
   ngames = 0
   while 1:
