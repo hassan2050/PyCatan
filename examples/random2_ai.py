@@ -69,6 +69,7 @@ class Random2Player(ai_player.AIPlayer):
             robber_flag = True
         if DevCard.Knight in self.player.dev_cards:
           (tile, victim) = self.move_robber(sim)
+          args = {}
           args['robber_tile'] = tile
           args['victim'] = victim
           res = self.game.use_dev_card(self.player, card, args)
@@ -85,17 +86,17 @@ class Random2Player(ai_player.AIPlayer):
         ## check if there are any available spots
         available_roads = self.player.get_available_roads()
         if available_roads and self.player.num_roads > 0:
-          actions.append(("build_road", available_roads))
+          actions.append((2, ("build_road", available_roads)))
 
       if self.player.has_cards([ResCard.Wood, ResCard.Brick, ResCard.Wheat, ResCard.Sheep]):
         ## check if there are any available spots
         available_points = self.player.get_available_settlements()
         if available_points and self.player.num_settlements > 0:
-          actions.append(("build_settlement", available_points))
+          actions.append((3, ("build_settlement", available_points)))
 
       if self.player.has_cards([ResCard.Ore, ResCard.Wheat, ResCard.Sheep]):
         if len(self.game.dev_deck) > 0:
-          actions.append(("build_dev", None))
+          actions.append((1, ("build_dev", None)))
 
       if len(self.player.cards) > 0:
         cards = []
@@ -104,13 +105,13 @@ class Random2Player(ai_player.AIPlayer):
           if n >= 4:
             cards.append(ctype)
         if cards:
-          actions.append(("trade_to_bank", cards))
+          actions.append((2, ("trade_to_bank", cards)))
 
       if self.player.has_cards([ResCard.Ore, ResCard.Ore, ResCard.Ore, ResCard.Wheat, ResCard.Wheat]):
         bpoints = [item for sublist in self.game.board.points for item in sublist]
         settlements = [building for building in self.player.get_buildings() if building.type == pycatan.BuildingType.Settlement]
         if settlements and self.player.num_cities > 0:
-          actions.append(("upgrade_settlement", settlements))
+          actions.append((4, ("upgrade_settlement", settlements)))
 
       if self.player.dev_cards:
         playable = []
@@ -126,7 +127,7 @@ class Random2Player(ai_player.AIPlayer):
           else:
             playable.append(c)
         if playable:
-          actions.append(("use_dev_card", playable))
+          actions.append((1, ("use_dev_card", playable)))
 
       ## remove the actions that caused errors
       actions = [(action,args) for action,args in actions if action not in error_actions]
@@ -134,8 +135,14 @@ class Random2Player(ai_player.AIPlayer):
 
       logging.debug("%s: actions %s" % (self.player, actions))
 
+      actions.sort(key=lambda x: x[0])
+      
+      weight = actions[-1][0]
+
+      actions = [action for w,action in actions if w==weight]
       action = random.choice(actions)
       cmd = action[0]
+      #logging.info("%s: action: %s" % (self.player, action))
 
       if cmd == "build_road":
         available_roads = action[1]
@@ -191,6 +198,7 @@ class Random2Player(ai_player.AIPlayer):
         if res != Statuses.ALL_GOOD: 
           logging.error("%s: build_dev %s" % (self.player, res))
           error_actions.append("build_dev")
+
       elif cmd == "use_dev_card":
         available_cards = action[1]
         card = random.choice(available_cards)
