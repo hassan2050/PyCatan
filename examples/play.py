@@ -12,6 +12,7 @@ import random
 
 import random_ai
 import random2_ai
+import hayden_ai
 
 _version = "0.1"
 
@@ -107,9 +108,10 @@ def start():
   	br = None
 
   players = []
-  players.append(random_ai.RandomPlayer("random1a"))
-  players.append(random_ai.RandomPlayer("random1b"))
-  players.append(random2_ai.Random2Player("random2"))
+  players.append(random_ai.RandomPlayer("random_ai"))
+  players.append(hayden_ai.Random2Player("hayden_ai"))
+  players.append(random_ai.RandomPlayer("random_ai"))
+  #players.append(random2_ai.Random2Player("scott_ai"))
 
   ngames = 0
   while 1:
