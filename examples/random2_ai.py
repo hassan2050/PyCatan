@@ -72,7 +72,7 @@ class Random2Player(ai_player.AIPlayer):
           args = {}
           args['robber_tile'] = tile
           args['victim'] = victim
-          res = self.game.use_dev_card(self.player, card, args)
+          res = self.game.use_dev_card(self.player, DevCard.Knight, args)
           if res != Statuses.ALL_GOOD: 
             logging.error("%s: use_dev_card2 %s %s %s" % (self.player, res.name, card.name, args))
 

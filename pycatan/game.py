@@ -69,7 +69,7 @@ class Game:
         # builds the road
         stat = player.build_road(start=start, end=end, is_starting=is_starting)
         # checks for a new longest road segment
-        if self.log: self.log.log_player_buys_road(player, (start, end))
+        if self.log: self.log.log_player_buys_road(player, start, end)
         self.set_longest_road()
         # returns the status
         return stat
@@ -407,21 +407,27 @@ class Game:
       return self.board.tiles[i][j]
 
     def start_turn(self, player):
+      if self.log: self.log.log_player_start_turn(player)
       self.currentPlayer = player
       self.rolled_dice = False
       self.played_devcard = False
 
     def finished_turn(self, player):
+      player.finished_turn()
+      if self.log: self.log.log_player_ends_turn(player)
       self.currentPlayer = None
       pass
 
-    def save(self):
+    def dict(self):
       d = {}
       d['board'] = self.board
       d['points_to_win'] = self.points_to_win
       d['dev_deck'] = self.dev_deck
       d['players'] = self.players
+      return d
 
+    def save(self):
+      d = self.dict()
       s = json.dumps(d, sort_keys=True, indent=2, cls=DefaultEncoder)
       return s
 

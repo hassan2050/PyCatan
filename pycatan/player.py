@@ -22,6 +22,7 @@ class Player:
         self.cards = []
         # the development cards this player has
         self.dev_cards = []
+        self.new_dev_cards = []
         # the number of knight cards the player has played
         self.knight_cards = 0
         # the longest road segment this player has
@@ -167,7 +168,12 @@ class Player:
 
     #adds a development card
     def add_dev_card(self, dev_card):
-        self.dev_cards.append(dev_card)
+        self.new_dev_cards.append(dev_card)
+
+    def finished_turn(self):
+      for dcard in self.new_dev_cards:
+        self.dev_cards.append(dcard)
+      self.new_dev_cards = []
 
     # removes a dev card
     def remove_dev_card(self, card):

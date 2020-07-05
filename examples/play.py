@@ -20,8 +20,7 @@ _version = "0.1"
 
 class CatanSim:
   def __init__(self, players):
-    #self.log = catanlog.CatanLog()
-    self.log = None
+    self.log = catanlog.CatanLog()
     self.game = pycatan.Game(self.log)
     logging.debug("%s players" % len(self.game.players))
 
@@ -35,7 +34,7 @@ class CatanSim:
       player.controller.attach(player)
 
     if self.log:
-      self.log.log_game_start(self.game.players, [], [], [])
+      self.log.log_game_start(self.game)
       
 
   def roll_dice(self, player):
@@ -91,7 +90,6 @@ class CatanSim:
         self.game.start_turn(player)
 
         player.controller.take_turn(self)
-        if self.log: self.log.log_player_ends_turn(player)
         
         self.game.finished_turn(player)
 
@@ -103,6 +101,8 @@ class CatanSim:
     if self.log: self.log.log_player_wins(self.game.winner)
 
     self.mode = "finished"
+    #self.log.save()
+
     #br.render()
     #time.sleep(.1)
     #scores = [p.get_VP(include_dev=True) for p in self.game.players]
