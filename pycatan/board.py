@@ -87,6 +87,14 @@ class Board(object):
                                     card_type
                                 ])
 
+    def produce_initial_settlement(self, building):
+        # gets the card type
+        for tile in building.point.tiles:
+          card_type = Board.get_card_from_tile(tile.type)
+          self.game.players[building.owner].add_cards([
+            card_type
+            ])
+
 
     # adds a Building object to the board
     def add_building(self, building, point):

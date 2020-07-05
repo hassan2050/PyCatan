@@ -29,7 +29,7 @@ class RandomPlayer(ai_player.AIPlayer):
         for p2 in cpoints:
           r = self.game.add_road(self.player, p, p2, is_starting=True)
           if r == pycatan.Statuses.ALL_GOOD: 
-            return
+            return p
 
   def take_turn(self, sim):
     logging.debug("%s: take_turn" % self.player)

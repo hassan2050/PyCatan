@@ -72,7 +72,8 @@ class CatanSim:
       self.game.finished_turn(player)
     for player in reversed(self.game.players):
       self.game.start_turn(player)
-      player.controller.choose_starting_settlement()
+      p = player.controller.choose_starting_settlement()
+      self.game.board.produce_initial_settlement(p.building)
       self.game.finished_turn(player)
 
     #br.render()

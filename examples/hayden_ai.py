@@ -51,7 +51,7 @@ class Random2Player(ai_player.AIPlayer):
         for p2 in cpoints:
           r = self.game.add_road(self.player, p, p2, is_starting=True)
           if r == pycatan.Statuses.ALL_GOOD: 
-            return
+            return p
 
   def take_turn(self, sim):
     logging.debug("%s: take_turn" % self.player)
@@ -204,19 +204,27 @@ class Random2Player(ai_player.AIPlayer):
         card = random.choice(available_cards)
         args = {}
         if card == DevCard.YearOfPlenty:
+          args['card_one'] = None
+          args['card_two'] = None
+
           if self.player.has_cards([ResCard.Ore, ResCard.Ore, ResCard.Ore, ResCard.Wheat, ResCard.Wheat]) != True:
             if self.player.has_cards([ResCard.Ore, ResCard.Wheat, ResCard.Wheat]):
-              args['card_one'] = random.choice([ResCard.Ore,])
-              args['card_two'] = random.choice([ResCard.Ore,])
+              args['card_one'] = ResCard.Ore
+              args['card_two'] = ResCard.Ore
             elif self.player.has_cards([ResCard.Ore, ResCard.Ore, ResCard.Ore]):
-              args['card_one'] = random.choice([ResCard.Wheat,])
-              args['card_two'] = random.choice([ResCard.Wheat,])
+              args['card_one'] = ResCard.Wheat
+              args['card_two'] = ResCard.Wheat
             elif self.player.has_cards([ResCard.Ore, ResCard.Ore, ResCard.Wheat]):
-              args['card_one'] = random.choice([ResCard.Wheat,])
-              args['card_two'] = random.choice([ResCard.Ore,])
+              args['card_one'] = ResCard.Wheat
+              args['card_two'] = ResCard.Ore
             else:
-              args['card_one'] = random.choice([ResCard.Wood,])
-              args['card_two'] = random.choice([ResCard.Brick,])
+              args['card_one'] = ResCard.Wood
+              args['card_two'] = ResCard.Brick
+          if args['card_one'] == None:
+            args['card_one'] = random.choice([ResCard.Wood, ResCard.Brick, ResCard.Ore, ResCard.Sheep, ResCard.Wheat])
+          if args['card_two'] == None:
+            args['card_two'] = random.choice([ResCard.Wood, ResCard.Brick, ResCard.Ore, ResCard.Sheep, ResCard.Wheat])
+
           
 
         elif card == DevCard.Knight:
