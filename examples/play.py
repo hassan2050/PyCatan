@@ -11,7 +11,7 @@ except ImportError:
 import random
 
 import random_ai
-import random2_ai
+import scott_ai
 import hayden_ai
 
 import catanlog
@@ -129,7 +129,7 @@ def start():
   players.append(random_ai.RandomPlayer("random_ai"))
   players.append(hayden_ai.Random2Player("hayden_ai"))
   #players.append(random_ai.RandomPlayer("random_ai"))
-  players.append(random2_ai.Random2Player("scott_ai"))
+  players.append(scott_ai.AIPlayer("scott_ai"))
 
   ngames = 0
   while 1:

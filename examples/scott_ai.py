@@ -9,14 +9,23 @@ from pycatan import ResCard, DevCard, Statuses
 
 import ai_player
 
-class Random2Player(ai_player.AIPlayer):
+def Diff(li1, li2): 
+  li_dif = [i for i in li2 if i not in li1]
+  return li_dif
+
+class AIPlayer(ai_player.AIPlayer):
   def __init__(self, name):
-    super(Random2Player, self).__init__(name)
+    super(AIPlayer, self).__init__(name)
 
   def choose_starting_settlement(self):
     logging.debug("%s: choose" % self.player)
 
-    bpoints = [item for sublist in self.game.board.points for item in sublist]
+    buildings = self.player.get_buildings()
+    numbers = set()
+
+    numbers = set([tile.token_num for building in buildings for tile in building.point.tiles])
+
+    bpoints = self.game.board.get_all_points()
     possble_points = []
     for p in bpoints:
       if p.building: continue
@@ -25,13 +34,16 @@ class Random2Player(ai_player.AIPlayer):
       #logging.info("point %s %s %s %s" % (p, len(p.tiles), len(p.connected_points), p.tiles))
 
       for tile in p.tiles:
-        if tile.position[0] == 2 and tile.position[1] == 2:
-          w -= 5
-        w += 2. * tile.prob()
+        w += 4. * tile.prob()
         if tile.type in (pycatan.TileType.Fields, pycatan.TileType.Mountains):
           w += .25 * tile.prob()
         if tile.type in (pycatan.TileType.Pasture,):
           w += .15 * tile.prob()
+
+      ## add for diversity
+      new_numbers = set([tile.token_num for tile in p.tiles]).union(numbers)
+      d = len(new_numbers) - len(numbers)
+      w += d * .25
 
       for tile in p.tiles:
         if tile.position[0] == 2 and tile.position[1] == 2:
@@ -163,10 +175,10 @@ class Random2Player(ai_player.AIPlayer):
         for point in available_points:
           w = 0.
           for tile in point.tiles:
-            w += 2. * tile.prob()
+            w += 4. * tile.prob()
 
             if tile.type in (pycatan.TileType.Fields, pycatan.TileType.Mountains):
-              w += .25 * tile.prob()
+              w += .35 * tile.prob()
             if tile.type in (pycatan.TileType.Pasture,):
               w += .15 * tile.prob()
           ranked_settlements.append((w, point))
@@ -220,8 +232,25 @@ class Random2Player(ai_player.AIPlayer):
         card = random.choice(available_cards)
         args = {}
         if card == DevCard.YearOfPlenty:
-          args['card_one'] = random.choice([ResCard.Wood, ResCard.Brick, ResCard.Ore, ResCard.Sheep, ResCard.Wheat])
-          args['card_two'] = random.choice([ResCard.Wood, ResCard.Brick, ResCard.Ore, ResCard.Sheep, ResCard.Wheat])
+          cards = self.player.cards[:]
+          possible_requests = []
+          for w,buildType in ((3, pycatan.card.settlementBuild), (4,pycatan.card.cityBuild), 
+                              (2,pycatan.card.roadBuild), (1,pycatan.card.devBuild)):
+            d1 = Diff(cards, buildType)
+            if len(d1) == 1:
+              ## probably need to do something better here
+              possible_requests.append((w, d1[0], d1[0]))
+            elif len(d1) == 2:
+              possible_requests.append((w, d1[0], d1[1]))
+
+          if len(possible_requests):
+            possible_requests.sort(key=lambda x: x[0])
+            args['card_one'] = possible_requests[-1][1]
+            args['card_two'] = possible_requests[-1][2]
+          else:
+            args['card_one'] = random.choice([ResCard.Wood, ResCard.Brick, ResCard.Ore, ResCard.Sheep, ResCard.Wheat])
+            args['card_two'] = random.choice([ResCard.Wood, ResCard.Brick, ResCard.Ore, ResCard.Sheep, ResCard.Wheat])
+
         elif card == DevCard.Knight:
           (tile, victim) = self.move_robber(sim)
           args['robber_tile'] = tile
@@ -241,10 +270,6 @@ class Random2Player(ai_player.AIPlayer):
           error_actions.append("use_dev_card")
         
       elif cmd == "trade_to_bank":
-        def Diff(li1, li2): 
-          li_dif = [i for i in li2 if i not in li1]
-          return li_dif
-        
         possible_requests = []
         for card in action[1]:
           cards = self.player.cards[:]
